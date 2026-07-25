@@ -1,7 +1,34 @@
 import os
+import json
+import asyncio
+import json
+from typing import List
+from pydantic import BaseModel, Field
 from neo4j import GraphDatabase
 from langchain_ollama import ChatOllama
 from hybrid_search_engine import HybridSearchEngine, CORPUS
+
+# Define rigid schemas for structured output
+class Entity(BaseModel):
+    name: str = Field(description="Name of the entity, normalized to lowercase")
+    type: str = Field(description="Entity type: COMPANY, BUSINESS_SEGMENT, FINANCIAL_METRIC, or TIME_PERIOD")
+
+class Relationship(BaseModel):
+    source: str = Field(description="Source entity name")
+    type: str = Field(description="Relationship type: PART_OF, REPORTS, FOR_PERIOD, or ACQUIRED")
+    target: str = Field(description="Target entity name")
+
+class GraphExtraction(BaseModel):
+    entities: List[Entity]
+    relationships: List[Relationship]
+
+class ExtractedQueryEntity(BaseModel):
+    text: str = Field(description="The exact entity text mentioned in the query, e.g. 'Apple'")
+    type: str = Field(description="The type of entity: COMPANY, BUSINESS_SEGMENT, FINANCIAL_METRIC, or TIME_PERIOD")
+
+class QueryExtractionResult(BaseModel):
+    entities: List[ExtractedQueryEntity]
+
 
 class GraphRAGPipeline:
     def __init__(self):
@@ -12,59 +39,284 @@ class GraphRAGPipeline:
             temperature=0,
             base_url=self.ollama_base_url
         )
+        self.structured_llm = self.llm.with_structured_output(GraphExtraction, method="json_mode")
         neo4j_uri = os.getenv("NEO4J_URI", "bolt://localhost:7687")
         neo4j_user = os.getenv("NEO4J_USER", "neo4j")
         neo4j_password = os.getenv("NEO4J_PASSWORD", "password123")
         self.neo4j_driver = GraphDatabase.driver(
             neo4j_uri, auth=(neo4j_user, neo4j_password)
         )
-        if self.search_engine.recreate_needed == True:
+        if self.search_engine.recreate_needed or self._is_graph_empty():
             self._initialize_knowledge_graph()
 
-    def _initialize_knowledge_graph(self):
+    def _is_graph_empty(self) -> bool:
+        """Check if the Neo4j database has no nodes."""
+        with self.neo4j_driver.session() as session:
+            result = session.run("MATCH (n) RETURN count(n) AS count")
+            record = result.single()
+            return record["count"] == 0
+        
+
+    def _ensure_indexes(self):
+        """Ensure uniqueness constraints and indexes exist before insertion."""
+        with self.neo4j_driver.session() as session:
+            session.run("""
+                CREATE CONSTRAINT entity_name_unique IF NOT EXISTS
+                FOR (e:Entity) REQUIRE e.name IS UNIQUE
+            """)
+
+    async def _extract_from_chunk(self, doc: str) -> GraphExtraction:
+        """Asynchronously extract graph data from a single document chunk."""
+        prompt = f"""
+        Identify all key Entities and Relationships in the text below.
+        
+        Allowed Entity Types: [COMPANY, BUSINESS_SEGMENT, FINANCIAL_METRIC, TIME_PERIOD]
+        Allowed Relationship Types: [PART_OF, REPORTS, FOR_PERIOD, ACQUIRED]
+
+        You must format your response STRICTLY as a JSON object matching this structure:
+        {{
+            "entities": [
+                {{"name": "entity name", "type": "ENTITY_TYPE"}}
+            ],
+            "relationships": [
+                {{"source": "source_entity_name", "type": "RELATIONSHIP_TYPE", "target": "target_entity_name"}}
+            ]
+        }}
+        
+        Formatting constraints:
+        1. Use exactly "name" (not "id" or "text") for the entity name.
+        2. Use exactly "type" (not "relationship_type" or "label") for the relationship type.
+        3. CRITICAL: Every element in the "entities" list MUST be a full object with "name" and "type". Under NO circumstances should you return plain strings in the "entities" list.
+        4. If no entities or relationships are found, return empty lists: {{"entities": [], "relationships": []}}
+        
+        Text:
+        "{doc}"
+        """
+        try:
+            # Using structured output guarantees clean data directly matching the Pydantic schema
+            return await self.structured_llm.ainvoke(prompt)
+        except Exception as e:
+            print(f"Error extracting chunk: {e}")
+            return GraphExtraction(entities=[], relationships=[])
+
+    def _batch_write_to_neo4j(self, all_entities: list, all_relationships: list):
+        """Write all collected graph elements in batched Cypher operations."""
+        allowed_rel_types = {"PART_OF", "REPORTS", "FOR_PERIOD", "ACQUIRED"}
+        
+        # Deduplicate & format entities
+        deduped_entities = {
+            e["name"].lower().strip(): e["type"].upper().strip() 
+            for e in all_entities if e.get("name") and e.get("type")
+        }
+        entities_batch = [{"name": k, "type": v} for k, v in deduped_entities.items()]
+
+        # Group relationships by allowed type
+        rels_by_type = {}
+        for rel in all_relationships:
+            r_type = rel.get("type", "").upper().strip()
+            if r_type in allowed_rel_types:
+                rels_by_type.setdefault(r_type, []).append({
+                    "source": rel["source"].lower().strip(),
+                    "target": rel["target"].lower().strip()
+                })
+
+        with self.neo4j_driver.session() as session:
+            # 1. Batch insert entities
+            if entities_batch:
+                session.run(
+                    """
+                    UNWIND $batch AS item
+                    MERGE (e:Entity {name: item.name})
+                    ON CREATE SET e.type = item.type
+                    """,
+                    batch=entities_batch
+                )
+
+            # 2. Batch insert relationships grouped by edge label
+            for r_type, rel_list in rels_by_type.items():
+                session.run(
+                    f"""
+                    UNWIND $batch AS item
+                    MERGE (a:Entity {{name: item.source}})
+                    MERGE (b:Entity {{name: item.target}})
+                    MERGE (a)-[:{r_type}]->(b)
+                    """,
+                    batch=rel_list
+                )
+
+
+
+    async def _knowledge_graph_builder(self, concurrency_limit: int = 10):
+        print("Initializing Neo4j Knowledge dynamically from corpus...")
         # Programmatically write core entity linkages to Neo4j
+
+        self._ensure_indexes()
+
         with self.neo4j_driver.session() as session:
             # Clean database first
             session.run("MATCH (n) DETACH DELETE n")
             
-            # Seed Entities and Relationships
-            session.run("CREATE (sarah:Entity {name: 'sarah', type: 'PERSON'})")
-            session.run("CREATE (alpha:Entity {name: 'project alpha', type: 'PROJECT'})")
-            session.run("CREATE (infra:Entity {name: 'cloud infrastructure', type: 'DEPARTMENT'})")
-            
-            session.run("""
-                MATCH (s:Entity {name: 'sarah'}), (a:Entity {name: 'project alpha'})
-                CREATE (s)-[:LEADS]->(a)
-            """)
-            session.run("""
-                MATCH (s:Entity {name: 'sarah'}), (i:Entity {name: 'cloud infrastructure'})
-                CREATE (s)-[:MANAGES]->(i)
-            """)
+        documents = self.search_engine.documents
+        
+        semaphore = asyncio.Semaphore(concurrency_limit)
 
-    def query_graph_relationships(self, keywords: list) -> list:
-        # Find 1-hop connections for any detected keywords
-        # used to fetch structural context to augment the LLM's prompt
+        async def worker(doc):
+            async with semaphore:
+                return await self._extract_from_chunk(doc)
+
+        # Run extraction jobs concurrently across chunks
+        print(f"Extracting relationships concurrently (Concurrency: {concurrency_limit})...")
+        results: List[GraphExtraction] = await asyncio.gather(
+            *(worker(doc) for doc in documents)
+        )
+
+        # Aggregate results across all chunks
+        all_entities = []
+        all_relationships = []
+        for res in results:
+            all_entities.extend([e.model_dump() for e in res.entities])
+            all_relationships.extend([r.model_dump() for r in res.relationships])
+
+        # Writing to Neo4j in bulk
+        print("Writing extracted data to Neo4j in batch...")
+        self._batch_write_to_neo4j(all_entities, all_relationships)
+        print("Graph initialization complete!")
+
+
+
+    def _initialize_knowledge_graph(self):
+        """Synchronous wrapper to run the async graph builder."""
+        asyncio.run(self._knowledge_graph_builder())
+
+    def extract_and_link_entities(self, user_query: str, model_name: str = "llama3.2:3b") -> dict:
+        """
+        1. Extract entities from the user query via LLM.
+        2. Normalize strings.
+        3. Match extracted entities against existing Neo4j nodes.
+        """
+        prompt = f"""
+        Extract all domain-specific entities from the following user query.
+        Allowed Types: [COMPANY, BUSINESS_SEGMENT, FINANCIAL_METRIC, TIME_PERIOD]
+
+        You must format your response STRICTLY as a JSON object with this key structure:
+        {{
+            "entities": [
+                {{"text": "entity name", "type": "ENTITY_TYPE"}}
+            ]
+        }}
+
+        Query: "{user_query}"
+        """
+        
+        llm = ChatOllama(
+            model=model_name,
+            temperature=0,
+            base_url=self.ollama_base_url
+        )
+        structured_llm = llm.with_structured_output(QueryExtractionResult, method="json_mode")
+        # 1. LLM Extraction
+        try:
+            extraction = structured_llm.invoke(prompt)
+        except Exception as e:
+            print(f"Extraction failed: {e}")
+            return {"raw_entities": [], "matched_nodes": []}
+
+        normalized_entities = [
+            {"text": e.text.lower().strip(), "type": e.type.upper().strip()}
+            for e in extraction.entities
+        ]
+
+        if not normalized_entities:
+            return {"raw_entities": [], "matched_nodes": []}
+
+        # 2. Match entities against Neo4j using token overlap
+        matched_nodes = []
+        
+        # Stop words to ignore during matching to avoid false positives (e.g. matching everything with "the" or "company")
+        STOP_WORDS = {"the", "of", "and", "a", "company", "in", "to", "for", "contracts", "rates", "rate", "inc", "co", "ltd"}
+
+        try:
+            with self.neo4j_driver.session() as session:
+                # Fetch all existing entities in the graph
+                result = session.run("MATCH (e:Entity) RETURN e.name AS name, e.type AS type")
+                db_entities = [{"name": r["name"], "type": r["type"]} for r in result]
+                
+            for ext_entity in normalized_entities:
+                ext_name = ext_entity["text"].lower().strip()
+                ext_tokens = set(ext_name.split()) - STOP_WORDS
+                
+                if not ext_tokens:
+                    ext_tokens = set(ext_name.split())
+                    
+                for db_ent in db_entities:
+                    db_name_lower = db_ent["name"].lower().strip()
+                    
+                    # Check for exact match or strict substring containment first
+                    if ext_name == db_name_lower or ext_name in db_name_lower or db_name_lower in ext_name:
+                        if db_ent not in matched_nodes:
+                            matched_nodes.append(db_ent)
+                        continue
+                    
+                    # Token-based overlap check
+                    db_tokens = set(db_name_lower.split()) - STOP_WORDS
+                    if not db_tokens:
+                        db_tokens = set(db_name_lower.split())
+                        
+                    overlap = ext_tokens.intersection(db_tokens)
+                    if len(overlap) >= 2 or (len(ext_tokens) == 1 and len(overlap) >= 1):
+                        if db_ent not in matched_nodes:
+                            matched_nodes.append(db_ent)
+        except Exception as e:
+            print(f"Error matching entities against Neo4j: {e}")
+
+        return {
+            "raw_extracted": normalized_entities,
+            "matched_nodes": matched_nodes
+        }
+
+
+
+    def query_graph_relationships(self, user_query: str, max_triplets: int = 20, model_name: str = "llama3.2:3b") -> list:
+        """
+        1. Extract and link entities from user query.
+        2. Traverse 1-hop relationships (in both directions) for matched nodes.
+        3. Return structured string relationships for LLM prompt augmentation.
+        """
+
+        # 1. Reuse entity extraction & linking logic
+        extraction_result = self.extract_and_link_entities(user_query, model_name)
+        matched_nodes = extraction_result.get("matched_nodes", [])
+
+        if not matched_nodes:
+            return []
+
+        # Get target entity names that exist in the graph
+        entity_names = [node["name"] for node in matched_nodes]
+
+        # 2. Fetch 1-hop context (both incoming and outgoing relationships)
         relations = []
         with self.neo4j_driver.session() as session:
-            query = """
-            MATCH (n:Entity)-[r]->(m:Entity)
-            WHERE n.name IN $keywords OR m.name IN $keywords
-            RETURN n.name AS source, type(r) AS rel, m.name AS target
-            LIMIT 5
+            cypher = """
+            MATCH (n:Entity)
+            WHERE n.name IN $names
+            MATCH (n)-[r]-(m:Entity)
+            RETURN n.name AS source, type(r) AS rel, m.name AS target, labels(n) AS source_label
+            LIMIT $limit
             """
-            result = session.run(query, keywords=keywords)
+            result = session.run(cypher, names=entity_names, limit=max_triplets)
+
             for record in result:
-                relations.append(f"({record['source']})-[{record['rel']}]->({record['target']})")
+                triplet = f"({record['source']}) -[{record['rel']}]-> ({record['target']})"
+                if triplet not in relations:
+                    relations.append(triplet)
+
         return relations
+        
 
     def run_pipeline(self, query:str, model_name: str = "llama3.2:3b") -> str:
 
         text_context = self.search_engine.search(query)
-
-        # Extract keywords from the query for graph lookup
-        words = [word.strip().lower() for word in query.replace("?", "").split(" ")]
-        graph_context = self.query_graph_relationships(words)
-
+        graph_context = self.query_graph_relationships(query)
         context_str = "Text Context:\n" + "\n".join(text_context) + "\n\nGraph Context:\n" + "\n".join(graph_context)
         prompt = f"Using ONLY the context below, answer the query.\n\nContext:\n{context_str}\n\nQuery: {query}"
         
@@ -84,7 +336,7 @@ if __name__ == "__main__":
         pipeline = GraphRAGPipeline()
         pipeline.neo4j_driver.verify_connectivity()
         print("Successfully connected to Neo4j database!")
-        query = "What department does Sarah manage?"
+        query = " As of October 31, 2009, what was the estimated fair value of the company's forward exchange contracts after a hypothetical 10% unfavorable movement in foreign currency exchange rates?"
         answer, formatted_context = pipeline.run_pipeline(query)
         end_time = time()
         print(f"Time taken: {(end_time - start_time) * 1000} ms")

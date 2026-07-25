@@ -14,6 +14,7 @@ services:
     ports:
       - "6379:6379"
     networks:
+      - ingress-routing
       - data-backplane
 
   # Relational Entity Store
@@ -26,6 +27,7 @@ services:
     environment:
       - NEO4J_AUTH=neo4j/password123
     networks:
+      - ingress-routing
       - data-backplane
 
   # Unified API Service

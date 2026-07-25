@@ -52,8 +52,7 @@ class StateAgent:
         """Queries the underlying hybrid and graph data planes."""
         print("[Node: GraphRAG Retrieval] Gathering facts...")
         texts = self.rag_pipeline.search_engine.search(state["query"])
-        words = [word.strip().lower() for word in state["query"].replace("?", "").split(" ")]
-        relations = self.rag_pipeline.query_graph_relationships(words)
+        relations = self.rag_pipeline.query_graph_relationships(state["query"], model_name = state["model"])
         return {"retrieved_text": texts, "retrieved_graph": relations}
 
     def response_node(self, state: PipelineState):

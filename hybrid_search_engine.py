@@ -17,7 +17,7 @@ from langchain_huggingface import HuggingFaceEmbeddings
 #     "The marketing team is preparing a campaign for Project Alpha launch."
 # ]
 
-CORPUS = FinQA_corpus
+CORPUS = FinQA_corpus[:10]
 
 class HybridSearchEngine:
     def __init__(self, documents: list):
