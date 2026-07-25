@@ -58,11 +58,11 @@ docker compose up -d --build
 
 | Commit | Author | Date | Message |
 | --- | --- | --- | --- |
+| `0ee6a1c` | Ushnesha Daripa | 2026-07-25 | graph database neo4j implemented |
+| `6462761` | Ushnesha Daripa | 2026-07-22 | docs: auto-update README [skip ci] |
 | `ec80edb` | Ushnesha Daripa | 2026-07-22 | disk pickling of bm25 index to avoid rebuilding on every run |
 | `6926590` | Ushnesha Daripa | 2026-07-22 | docs: auto-update README [skip ci] |
 | `dd9fb2c` | Ushnesha Daripa | 2026-07-22 | added time logs for audit |
-| `85b2f56` | Ushnesha Daripa | 2026-07-22 | docs: auto-update README [skip ci] |
-| `204013e` | Ushnesha Daripa | 2026-07-22 | switching to mps embedding calls from ollama call, implemented batch qdrant upserting |
 
 
 ---
