@@ -20,11 +20,14 @@ class HybridSearchEngine:
     def __init__(self, documents: list):
         self.documents = documents
 
-        # Initialize Local Ollama Embeddings
+        # Initialize Hugging Face Embeddings with dynamic device fallback (mps for host, cpu for docker)
+        import torch
+        device = "mps" if torch.backends.mps.is_available() else "cpu"
+        
         self.embeddings = HuggingFaceEmbeddings(
             model_name="sentence-transformers/all-MiniLM-L6-v2",
             model_kwargs={
-                'device':'mps',
+                'device': device,
             }
         )
         
