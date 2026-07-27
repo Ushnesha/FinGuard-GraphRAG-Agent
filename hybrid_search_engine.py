@@ -5,9 +5,8 @@ import pickle
 from qdrant_client import QdrantClient
 from qdrant_client.models import Distance, VectorParams, PointStruct
 from rank_bm25 import BM25Okapi
-from langchain_ollama import OllamaEmbeddings
-from load_data import FinQA_corpus, TatQA_corpus
 from langchain_huggingface import HuggingFaceEmbeddings
+from config import CORPUS, QUERY
 
 # 1. Define the Raw Corpus
 # CORPUS = [
@@ -16,8 +15,6 @@ from langchain_huggingface import HuggingFaceEmbeddings
 #     "We have a strict $50,000 budget ceiling for cloud infrastructure operations.",
 #     "The marketing team is preparing a campaign for Project Alpha launch."
 # ]
-
-CORPUS = FinQA_corpus[:10]
 
 class HybridSearchEngine:
     def __init__(self, documents: list):
@@ -38,8 +35,8 @@ class HybridSearchEngine:
         # Generate a hash representing the current corpus content
         corpus_str = "".join(sorted(self.documents))
         current_hash = hashlib.md5(corpus_str.encode("utf-8")).hexdigest()
+        self.corpus_hash = current_hash
 
-        
         self.recreate_needed = True
         if self.qdrant.collection_exists(self.collection_name):
             try:
@@ -162,12 +159,11 @@ if __name__ == "__main__":
     initialization_end_time = time()
     print(f"Time taken for Hybrid Search Engine Initialization: {(initialization_end_time - initialization_start_time) * 1000} ms")
     query_srch_start_time = time()
-    user_query = "what is the the interest expense in 2009?"
-    refined_results = engine.search(user_query)
+    refined_results = engine.search(QUERY)
     query_srch_end_time = time()
     print(f"Time taken for Query Search: {(query_srch_end_time - query_srch_start_time) * 1000} ms")
     engine.close()
     print("--- REFINED SEARCH RESULTS (RRF) ---")
-    print(f"Query: {user_query}")
+    print(f"Query: {QUERY}")
     for idx, result in enumerate(refined_results):
         print(f"[{idx + 1}] {result}")

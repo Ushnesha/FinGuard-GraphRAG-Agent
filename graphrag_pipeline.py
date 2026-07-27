@@ -6,7 +6,8 @@ from typing import List
 from pydantic import BaseModel, Field
 from neo4j import GraphDatabase
 from langchain_ollama import ChatOllama
-from hybrid_search_engine import HybridSearchEngine, CORPUS
+from hybrid_search_engine import HybridSearchEngine
+from config import CORPUS, QUERY
 
 # Define rigid schemas for structured output
 class Entity(BaseModel):
@@ -46,15 +47,25 @@ class GraphRAGPipeline:
         self.neo4j_driver = GraphDatabase.driver(
             neo4j_uri, auth=(neo4j_user, neo4j_password)
         )
-        if self.search_engine.recreate_needed or self._is_graph_empty():
+        if self._is_graph_initialize_needed():
             self._initialize_knowledge_graph()
 
-    def _is_graph_empty(self) -> bool:
-        """Check if the Neo4j database has no nodes."""
+    def _is_graph_initialize_needed(self) -> bool:
+        """Check if the Neo4j database has no Entity nodes or is out of sync with the corpus."""
         with self.neo4j_driver.session() as session:
-            result = session.run("MATCH (n) RETURN count(n) AS count")
+            # 1. Check if we have any Entity nodes
+            result = session.run("MATCH (e:Entity) RETURN count(e) AS count")
             record = result.single()
-            return record["count"] == 0
+            if record["count"] == 0:
+                return True
+                
+            # 2. Check if the stored corpus hash matches the current search engine hash
+            result = session.run("MATCH (m:Metadata {id: 1}) RETURN m.corpus_hash AS hash")
+            record = result.single()
+            if not record or record["hash"] != self.search_engine.corpus_hash:
+                return True
+                
+            return False
         
 
     def _ensure_indexes(self):
@@ -101,6 +112,10 @@ class GraphRAGPipeline:
 
     def _batch_write_to_neo4j(self, all_entities: list, all_relationships: list):
         """Write all collected graph elements in batched Cypher operations."""
+        # Convert Pydantic objects to dicts if they aren't already
+        all_entities = [e.model_dump() if hasattr(e, "model_dump") else e for e in all_entities]
+        all_relationships = [r.model_dump() if hasattr(r, "model_dump") else r for r in all_relationships]
+        
         allowed_rel_types = {"PART_OF", "REPORTS", "FOR_PERIOD", "ACQUIRED"}
         
         # Deduplicate & format entities
@@ -180,6 +195,13 @@ class GraphRAGPipeline:
         # Writing to Neo4j in bulk
         print("Writing extracted data to Neo4j in batch...")
         self._batch_write_to_neo4j(all_entities, all_relationships)
+        
+        # Save the corpus hash to Neo4j metadata
+        with self.neo4j_driver.session() as session:
+            session.run(
+                "MERGE (m:Metadata {id: 1}) SET m.corpus_hash = $hash",
+                hash=self.search_engine.corpus_hash
+            )
         print("Graph initialization complete!")
 
 
@@ -336,11 +358,10 @@ if __name__ == "__main__":
         pipeline = GraphRAGPipeline()
         pipeline.neo4j_driver.verify_connectivity()
         print("Successfully connected to Neo4j database!")
-        query = " As of October 31, 2009, what was the estimated fair value of the company's forward exchange contracts after a hypothetical 10% unfavorable movement in foreign currency exchange rates?"
-        answer, formatted_context = pipeline.run_pipeline(query)
+        answer, formatted_context = pipeline.run_pipeline(QUERY)
         end_time = time()
         print(f"Time taken: {(end_time - start_time) * 1000} ms")
-        print(f"\n--- FORMATTED FINAL CONTEXT FOR QUERY : {query} ---")
+        print(f"\n--- FORMATTED FINAL CONTEXT FOR QUERY : {QUERY} ---")
         print(formatted_context)
         print("\n--- FINAL ANSWER ---")
         print(answer)
