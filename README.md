@@ -58,11 +58,11 @@ docker compose up -d --build
 
 | Commit | Author | Date | Message |
 | --- | --- | --- | --- |
+| `bfcc40e` | Ushnesha Daripa | 2026-07-26 | code added to choose device |
+| `1cde6f6` | Ushnesha Daripa | 2026-07-26 | docs: auto-update README [skip ci] |
 | `563ca89` | Ushnesha Daripa | 2026-07-26 | implemented unstructured data parsing an dloading using LLamaIndex |
 | `ee6a3a9` | Ushnesha Daripa | 2026-07-25 | docs: auto-update README [skip ci] |
 | `0ee6a1c` | Ushnesha Daripa | 2026-07-25 | graph database neo4j implemented |
-| `6462761` | Ushnesha Daripa | 2026-07-22 | docs: auto-update README [skip ci] |
-| `ec80edb` | Ushnesha Daripa | 2026-07-22 | disk pickling of bm25 index to avoid rebuilding on every run |
 
 
 ---
