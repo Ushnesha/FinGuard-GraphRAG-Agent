@@ -84,7 +84,7 @@ async def handle_analyst_query(payload: QueryRequest):
         
         # 3. Hydrate cache
         cache_data = {"result": output, "tokens": tokens}
-        cache.set(cache_key, cache_data, ttl=300) # Cache for 5 minutes
+        cache.set(cache_key, cache_data, ttl=3000) # Cache for 5 minutes
         
         return {"source": "live_compute_nodes", "result": output, "tokens": tokens}
         
