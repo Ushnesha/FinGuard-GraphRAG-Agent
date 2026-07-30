@@ -42,7 +42,7 @@ class GraphRAGPipeline:
         #     base_url=self.ollama_base_url
         # )
         self.llm = ChatOpenAI(
-            model="meta-llama/Meta-Llama-3-8B-Instruct", 
+            model="NousResearch/Meta-Llama-3-8B-Instruct", 
             openai_api_key="none",                          # vLLM doesn't require a real API key
             openai_api_base="http://host.docker.internal:11434/v1",
             temperature=0
