@@ -58,11 +58,11 @@ docker compose up -d --build
 
 | Commit | Author | Date | Message |
 | --- | --- | --- | --- |
+| `e7cc789` | Ushnesha Daripa | 2026-07-30 | remove slow structured llm output |
+| `d82e862` | Ushnesha Daripa | 2026-07-30 | docs: auto-update README [skip ci] |
 | `97db3ff` | Ushnesha Daripa | 2026-07-30 | chunking code updated to retain tables in a single chunk |
 | `1cc1659` | Ushnesha Daripa | 2026-07-30 | docs: auto-update README [skip ci] |
 | `a3e268e` | Ushnesha Daripa | 2026-07-30 | code added for document chunking |
-| `002519a` | Ushnesha Daripa | 2026-07-30 | Merge pull request #4 from Ushnesha/ush_remote |
-| `a086d66` | Ushnesha | 2026-07-30 | code updated |
 
 
 ---
