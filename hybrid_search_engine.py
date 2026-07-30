@@ -6,7 +6,7 @@ from qdrant_client import QdrantClient
 from qdrant_client.models import Distance, VectorParams, PointStruct
 from rank_bm25 import BM25Okapi
 from langchain_huggingface import HuggingFaceEmbeddings
-from config import CORPUS, QUERY
+from config import MEGA_CORPUS
 
 # 1. Define the Raw Corpus
 # CORPUS = [
@@ -15,6 +15,9 @@ from config import CORPUS, QUERY
 #     "We have a strict $50,000 budget ceiling for cloud infrastructure operations.",
 #     "The marketing team is preparing a campaign for Project Alpha launch."
 # ]
+
+CORPUS = MEGA_CORPUS[0]["CORPUS"]
+QUERY = MEGA_CORPUS[0]["QUERY"]
 
 class HybridSearchEngine:
     def __init__(self, documents: list):

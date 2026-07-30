@@ -8,7 +8,10 @@ from neo4j import GraphDatabase
 from langchain_ollama import ChatOllama
 from langchain_openai import ChatOpenAI
 from hybrid_search_engine import HybridSearchEngine
-from config import CORPUS, QUERY
+from config import MEGA_CORPUS
+
+CORPUS = MEGA_CORPUS[0]["CORPUS"]
+QUERY = MEGA_CORPUS[0]["QUERY"]
 
 # Define rigid schemas for structured output
 class Entity(BaseModel):
@@ -47,7 +50,7 @@ class GraphRAGPipeline:
             openai_api_base="http://host.docker.internal:11434/v1",
             temperature=0
         )
-        self.structured_llm = self.llm.with_structured_output(GraphExtraction, method="json_mode")
+        
         neo4j_uri = os.getenv("NEO4J_URI", "bolt://localhost:7687")
         neo4j_user = os.getenv("NEO4J_USER", "neo4j")
         neo4j_password = os.getenv("NEO4J_PASSWORD", "password123")
@@ -112,7 +115,8 @@ class GraphRAGPipeline:
         """
         try:
             # Using structured output guarantees clean data directly matching the Pydantic schema
-            return await self.structured_llm.ainvoke(prompt)
+            graphEx_structured_llm = self.llm.with_structured_output(GraphExtraction, method="json_mode")
+            return await graphEx_structured_llm.ainvoke(prompt)
         except Exception as e:
             print(f"Error extracting chunk: {e}")
             return GraphExtraction(entities=[], relationships=[])
@@ -236,16 +240,10 @@ class GraphRAGPipeline:
 
         Query: "{user_query}"
         """
-        
-        llm = ChatOllama(
-            model=model_name,
-            temperature=0,
-            base_url=self.ollama_base_url
-        )
-        structured_llm = llm.with_structured_output(QueryExtractionResult, method="json_mode")
+        qEx_structured_llm = self.llm.with_structured_output(QueryExtractionResult, method="json_mode")
         # 1. LLM Extraction
         try:
-            extraction = structured_llm.invoke(prompt)
+            extraction = qEx_structured_llm.invoke(prompt)
         except Exception as e:
             print(f"Extraction failed: {e}")
             return {"raw_entities": [], "matched_nodes": []}
@@ -342,19 +340,19 @@ class GraphRAGPipeline:
         return relations
         
 
-    def run_pipeline(self, query:str, model_name: str = "llama3.2:3b") -> str:
+    def run_pipeline(self, query:str) -> str:
 
         text_context = self.search_engine.search(query)
         graph_context = self.query_graph_relationships(query)
         context_str = "Text Context:\n" + "\n".join(text_context) + "\n\nGraph Context:\n" + "\n".join(graph_context)
         prompt = f"Using ONLY the context below, answer the query.\n\nContext:\n{context_str}\n\nQuery: {query}"
         
-        llm = ChatOllama(
-            model=model_name,
-            temperature=0,
-            base_url=self.ollama_base_url
-        )
-        response = llm.invoke(prompt).content
+        # llm = ChatOllama(
+        #     model=model_name,
+        #     temperature=0,
+        #     base_url=self.ollama_base_url
+        # )
+        response = self.llm.invoke(prompt).content
         return response, context_str
 
 
