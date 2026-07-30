@@ -1,7 +1,7 @@
 import os
 import json
 import asyncio
-import json
+import hashlib
 from typing import List
 from pydantic import BaseModel, Field
 from neo4j import GraphDatabase
@@ -11,7 +11,7 @@ from hybrid_search_engine import HybridSearchEngine
 from config import MEGA_CORPUS
 
 CORPUS = MEGA_CORPUS[0]["CORPUS"]
-QUERY = MEGA_CORPUS[0]["QUERY"]
+QUERY = MEGA_CORPUS[0]["QUERY"][0]
 
 # Define rigid schemas for structured output
 class Entity(BaseModel):
@@ -36,8 +36,11 @@ class QueryExtractionResult(BaseModel):
 
 
 class GraphRAGPipeline:
-    def __init__(self):
-        self.search_engine = HybridSearchEngine(CORPUS)
+    def __init__(self, documents: list = CORPUS):
+        self.documents = documents
+        corpus_str = "".join(sorted(self.documents))
+        self.corpus_hash = hashlib.md5(corpus_str.encode("utf-8")).hexdigest()
+        
         self.ollama_base_url = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
         # self.llm = ChatOllama(
         #     model="llama3.2:3b",
@@ -69,10 +72,10 @@ class GraphRAGPipeline:
             if record["count"] == 0:
                 return True
                 
-            # 2. Check if the stored corpus hash matches the current search engine hash
+            # 2. Check if the stored corpus hash matches the current corpus hash
             result = session.run("MATCH (m:Metadata {id: 1}) RETURN m.corpus_hash AS hash")
             record = result.single()
-            if not record or record["hash"] != self.search_engine.corpus_hash:
+            if not record or record["hash"] != self.corpus_hash:
                 return True
                 
             return False
@@ -182,7 +185,7 @@ class GraphRAGPipeline:
             # Clean database first
             session.run("MATCH (n) DETACH DELETE n")
             
-        documents = self.search_engine.documents
+        documents = self.documents
         
         semaphore = asyncio.Semaphore(concurrency_limit)
 
@@ -211,7 +214,7 @@ class GraphRAGPipeline:
         with self.neo4j_driver.session() as session:
             session.run(
                 "MERGE (m:Metadata {id: 1}) SET m.corpus_hash = $hash",
-                hash=self.search_engine.corpus_hash
+                hash=self.corpus_hash
             )
         print("Graph initialization complete!")
 
@@ -340,9 +343,9 @@ class GraphRAGPipeline:
         return relations
         
 
-    def run_pipeline(self, query:str) -> str:
+    def run_pipeline(self, query: str, search_engine: HybridSearchEngine) -> str:
 
-        text_context = self.search_engine.search(query)
+        text_context = search_engine.search(query)
         graph_context = self.query_graph_relationships(query)
         context_str = "Text Context:\n" + "\n".join(text_context) + "\n\nGraph Context:\n" + "\n".join(graph_context)
         prompt = f"Using ONLY the context below, answer the query.\n\nContext:\n{context_str}\n\nQuery: {query}"
@@ -360,10 +363,11 @@ if __name__ == "__main__":
     try:
         from time import time
         start_time = time()
+        search_engine = HybridSearchEngine(CORPUS)
         pipeline = GraphRAGPipeline()
         pipeline.neo4j_driver.verify_connectivity()
         print("Successfully connected to Neo4j database!")
-        answer, formatted_context = pipeline.run_pipeline(QUERY)
+        answer, formatted_context = pipeline.run_pipeline(QUERY, search_engine)
         end_time = time()
         print(f"Time taken: {(end_time - start_time) * 1000} ms")
         print(f"\n--- FORMATTED FINAL CONTEXT FOR QUERY : {QUERY} ---")
@@ -371,7 +375,7 @@ if __name__ == "__main__":
         print("\n--- FINAL ANSWER ---")
         print(answer)
 
-        pipeline.search_engine.close()
+        search_engine.close()
         pipeline.neo4j_driver.close()
     except Exception as e:
         print(f"Failed to connect to Neo4j: {e}")

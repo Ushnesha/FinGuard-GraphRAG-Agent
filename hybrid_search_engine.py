@@ -1,5 +1,6 @@
 # phase1_hybrid.py
 import os
+import re
 import hashlib
 import pickle
 from qdrant_client import QdrantClient
@@ -22,6 +23,8 @@ QUERY = MEGA_CORPUS[0]["QUERY"][0]
 class HybridSearchEngine:
     def __init__(self, documents: list):
         self.documents = documents
+        corpus_str = "".join(sorted(self.documents))
+        self.corpus_hash = hashlib.md5(corpus_str.encode("utf-8")).hexdigest()
 
         # Initialize Hugging Face Embeddings with dynamic device fallback (mps for host, cpu for docker)
         import torch
@@ -43,11 +46,6 @@ class HybridSearchEngine:
         # Initialize Qdrant
         self.qdrant = QdrantClient(path="./qdrant_db")
         self.collection_name = "local_chunks_minilm"
-        
-        # Generate a hash representing the current corpus content
-        corpus_str = "".join(sorted(self.documents))
-        current_hash = hashlib.md5(corpus_str.encode("utf-8")).hexdigest()
-        self.corpus_hash = current_hash
 
         self.recreate_needed = True
         if self.qdrant.collection_exists(self.collection_name):
@@ -57,7 +55,7 @@ class HybridSearchEngine:
                     collection_name=self.collection_name,
                     ids=[999999]
                 )
-                if results and results[0].payload.get("corpus_hash") == current_hash:
+                if results and results[0].payload.get("corpus_hash") == self.corpus_hash:
                     self.recreate_needed = False
             except Exception:
                 pass
@@ -72,21 +70,27 @@ class HybridSearchEngine:
                 collection_name=self.collection_name,
                 vectors_config=VectorParams(size=384, distance=Distance.COSINE) # miniLM vectors are 384 dim
             )
-            self._initialize_qdrant(current_hash)
+            self._initialize_qdrant(self.corpus_hash)
 
         # Initialize BM25 Index
         bm25_path = "./qdrant_db/bm25_index.pkl"
         if self.recreate_needed or not os.path.exists(bm25_path):
             print("Building and saving BM25 index...")
-            self.tokenized_corpus = [doc.lower().split(" ") for doc in documents]
+            # Ensure parent directory exists
+            os.makedirs(os.path.dirname(bm25_path), exist_ok=True)
+            self.tokenized_corpus = [self._tokenize(doc) for doc in self.documents]
             self.bm25 = BM25Okapi(self.tokenized_corpus)
-            # Save BM25 index to disk
+            # Save BM25 index to disk using the highest protocol for performance
             with open(bm25_path, "wb") as f:
-                pickle.dump(self.bm25, f)
+                pickle.dump(self.bm25, f, protocol=pickle.HIGHEST_PROTOCOL)
         else:
             print("Loading BM25 index from cache...")
             with open(bm25_path, "rb") as f:
                 self.bm25 = pickle.load(f)
+
+    def _tokenize(self, text: str) -> list:
+        """Standardized tokenizer for BM25 (strips punctuation and downcases)."""
+        return re.findall(r"\w+", text.lower())
 
 
         
@@ -140,7 +144,7 @@ class HybridSearchEngine:
         }
 
         # B. BM25 Search
-        tokenized_query = query.lower().split(" ")
+        tokenized_query = self._tokenize(query)
         bm25_scores = self.bm25.get_scores(tokenized_query)
         ranked_bm25 = sorted(zip(self.documents, bm25_scores), key=lambda x: x[1], reverse=True)
         bm25_ranks = {doc: index for index, (doc, score) in enumerate(ranked_bm25) if score > 0}
