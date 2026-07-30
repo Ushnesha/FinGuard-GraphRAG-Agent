@@ -97,21 +97,66 @@ class HybridSearchEngine:
         return re.findall(r"\w+", text.lower())
 
     def _chunk_document(self, doc: str, max_chars: int = 600, overlap: int = 120) -> list:
-        """Chunks large text documents into smaller sliding-window pieces with overlap."""
+        """
+        Chunks documents while keeping tables (lines containing '|') completely intact.
+        """
+        lines = doc.split("\n")
+        chunks = []
+        
+        current_text_block = []
+        current_table_block = []
+        in_table = False
+
+        for line in lines:
+            stripped = line.strip()
+            if not stripped:
+                continue
+            
+            # Check if this line is part of a table
+            is_table_line = "|" in stripped
+            
+            if is_table_line:
+                if not in_table:
+                    # Flush accumulated text block before starting table
+                    if current_text_block:
+                        chunks.extend(self._chunk_text_block("\n".join(current_text_block), max_chars, overlap))
+                        current_text_block = []
+                    in_table = True
+                current_table_block.append(stripped)
+            else:
+                if in_table:
+                    # Flush table block completely intact
+                    if current_table_block:
+                        chunks.append("\n".join(current_table_block))
+                        current_table_block = []
+                    in_table = False
+                current_text_block.append(stripped)
+
+        # Flush any remaining blocks
+        if in_table and current_table_block:
+            chunks.append("\n".join(current_table_block))
+        elif current_text_block:
+            chunks.extend(self._chunk_text_block("\n".join(current_text_block), max_chars, overlap))
+
+        return chunks
+
+    def _chunk_text_block(self, text: str, max_chars: int, overlap: int) -> list:
+        """Helper to chunk standard text paragraph blocks."""
         chunks = []
         start = 0
-        while start < len(doc):
+        while start < len(text):
             end = start + max_chars
-            if end < len(doc):
-                # Try to split nicely on a newline or space boundary
-                boundary = doc.rfind("\n", end - 150, end)
+            if end < len(text):
+                boundary = text.rfind("\n", end - 150, end)
                 if boundary == -1:
-                    boundary = doc.rfind(" ", end - 50, end)
+                    boundary = text.rfind(". ", end - 100, end)
+                if boundary == -1:
+                    boundary = text.rfind(" ", end - 50, end)
                 if boundary != -1:
-                    end = boundary
-            chunks.append(doc[start:end].strip())
+                    end = boundary + 1  # include the separator character
+            chunks.append(text[start:end].strip())
             start = end - overlap
-            if start >= len(doc) or end >= len(doc):
+            if start >= len(text) or end >= len(text):
                 break
             if start <= 0 or start == end - overlap:
                 start = end
