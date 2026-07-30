@@ -58,11 +58,11 @@ docker compose up -d --build
 
 | Commit | Author | Date | Message |
 | --- | --- | --- | --- |
+| `c67683f` | Ushnesha Daripa | 2026-07-29 | grapgrag_pipeline code updated to use vLLM chatOpenAI model |
+| `b4c64f2` | Ushnesha Daripa | 2026-07-28 | docs: auto-update README [skip ci] |
 | `e53e2c4` | Ushnesha Daripa | 2026-07-28 | input guardrail implemented |
 | `1097cb6` | Ushnesha Daripa | 2026-07-28 | docs: auto-update README [skip ci] |
 | `9939bbf` | Ushnesha Daripa | 2026-07-28 | redis cache ttl 300 -> 3000 |
-| `99a8a73` | Ushnesha Daripa | 2026-07-26 | docs: auto-update README [skip ci] |
-| `bfcc40e` | Ushnesha Daripa | 2026-07-26 | code added to choose device |
 
 
 ---
