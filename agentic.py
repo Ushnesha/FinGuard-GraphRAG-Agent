@@ -5,6 +5,10 @@ from typing import TypedDict, List, Literal
 from langgraph.graph import StateGraph, END
 from langchain_ollama import ChatOllama
 from graphrag_pipeline import GraphRAGPipeline
+from hybrid_search_engine import HybridSearchEngine
+from config import MEGA_CORPUS
+
+CORPUS = MEGA_CORPUS[0]["CORPUS"]
 
 # Define state structure
 class PipelineState(TypedDict):
@@ -22,6 +26,7 @@ class PipelineState(TypedDict):
 
 class StateAgent:
     def __init__(self):
+        self.search_engine = HybridSearchEngine(CORPUS)
         self.rag_pipeline = GraphRAGPipeline()
         self.ollama_base_url = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
         self.graph_workflow = self._build_state_graph()
@@ -93,7 +98,7 @@ class StateAgent:
     def retrieval_node(self, state: PipelineState):
         """Queries the underlying hybrid and graph data planes."""
         print("[Node: GraphRAG Retrieval] Gathering facts...")
-        texts = self.rag_pipeline.search_engine.search(state["query"])
+        texts = self.search_engine.search(state["query"])
         relations = self.rag_pipeline.query_graph_relationships(state["query"], model_name = state["model"])
         return {"retrieved_text": texts, "retrieved_graph": relations}
 
