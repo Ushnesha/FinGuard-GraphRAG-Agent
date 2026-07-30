@@ -42,6 +42,7 @@ services:
       - NEO4J_USER=neo4j
       - NEO4J_PASSWORD=password123
       - OLLAMA_BASE_URL=http://host.docker.internal:11434
+      - OPENAI_API_BASE=http://host.docker.internal:11434/v1
     extra_hosts:
       - "host.docker.internal:host-gateway" # Bridge to hit Ollama running on your GPU host machine
     depends_on:

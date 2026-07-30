@@ -1,6 +1,7 @@
 qdrant-client
 rank-bm25
 langchain-ollama
+langchain-openai
 pydantic
 neo4j
 redis
