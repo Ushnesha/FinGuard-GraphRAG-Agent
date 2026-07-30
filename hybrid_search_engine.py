@@ -17,7 +17,7 @@ from config import MEGA_CORPUS
 # ]
 
 CORPUS = MEGA_CORPUS[0]["CORPUS"]
-QUERY = MEGA_CORPUS[0]["QUERY"]
+QUERY = MEGA_CORPUS[0]["QUERY"][0]
 
 class HybridSearchEngine:
     def __init__(self, documents: list):
@@ -25,8 +25,14 @@ class HybridSearchEngine:
 
         # Initialize Hugging Face Embeddings with dynamic device fallback (mps for host, cpu for docker)
         import torch
-        device = "mps" if torch.backends.mps.is_available() else "cpu"
-        
+        if torch.cuda.is_available():
+            device = "cuda"
+        elif torch.backends.mps.is_available():
+            device = "mps"
+        else:
+            device = "cpu"
+        print(f"Using device: {device}")
+
         self.embeddings = HuggingFaceEmbeddings(
             model_name="sentence-transformers/all-MiniLM-L6-v2",
             model_kwargs={

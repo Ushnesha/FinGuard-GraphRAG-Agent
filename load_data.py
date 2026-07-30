@@ -95,14 +95,14 @@ def load_tatqa_corpus(json_path: str) -> list:
         
     return corpus
 
-FinQA_data_path = "data/FinQA/train.json"
-FinQA_corpus = load_finqa_corpus(FinQA_data_path)
-print(f"FinQa train data length: {len(FinQA_corpus)}")
+# FinQA_data_path = "data/FinQA/train.json"
+# FinQA_corpus = load_finqa_corpus(FinQA_data_path)
+# print(f"FinQa train data length: {len(FinQA_corpus)}")
 
-TatQA_data_path = "data/Tat-QA/tatqa_dataset_train.json"
-TatQA_corpus = load_tatqa_corpus(TatQA_data_path)
-print(f"TatQA train data length: {len(TatQA_corpus)}")
+# TatQA_data_path = "data/Tat-QA/tatqa_dataset_train.json"
+# TatQA_corpus = load_tatqa_corpus(TatQA_data_path)
+# print(f"TatQA train data length: {len(TatQA_corpus)}")
 
-FinBench_corpus = parse_and_load_globs("data/FinBench", "data/FinBench/parsed_corpus.pkl")
-print(f"FinBench corpus length: {len(FinBench_corpus)}")
+# FinBench_corpus = parse_and_load_globs("data/FinBench", "data/FinBench/parsed_corpus.pkl")
+# print(f"FinBench corpus length: {len(FinBench_corpus)}")
 
