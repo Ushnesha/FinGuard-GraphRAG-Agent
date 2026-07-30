@@ -48,9 +48,9 @@ class GraphRAGPipeline:
         #     base_url=self.ollama_base_url
         # )
         self.llm = ChatOpenAI(
-            model="NousResearch/Meta-Llama-3-8B-Instruct", 
+            model="meta-llama/Meta-Llama-3-8B-Instruct", 
             openai_api_key="none",                          # vLLM doesn't require a real API key
-            openai_api_base="http://host.docker.internal:11434/v1",
+            openai_api_base=os.getenv("OPENAI_API_BASE", "http://localhost:11434/v1"),
             temperature=0
         )
         
@@ -178,6 +178,7 @@ class GraphRAGPipeline:
     async def _knowledge_graph_builder(self, concurrency_limit: int = 10):
         print("Initializing Neo4j Knowledge dynamically from corpus...")
         # Programmatically write core entity linkages to Neo4j
+        strt = time.time()
 
         self._ensure_indexes()
 
@@ -217,6 +218,7 @@ class GraphRAGPipeline:
                 hash=self.corpus_hash
             )
         print("Graph initialization complete!")
+        print(f"Time taken for Graph Initialization: {(time.time()-strt)*1000}ms")
 
 
 
@@ -224,7 +226,7 @@ class GraphRAGPipeline:
         """Synchronous wrapper to run the async graph builder."""
         asyncio.run(self._knowledge_graph_builder())
 
-    def extract_and_link_entities(self, user_query: str, model_name: str = "llama3.2:3b") -> dict:
+    def extract_and_link_entities(self, user_query: str) -> dict:
         """
         1. Extract entities from the user query via LLM.
         2. Normalize strings.
@@ -306,7 +308,7 @@ class GraphRAGPipeline:
 
 
 
-    def query_graph_relationships(self, user_query: str, max_triplets: int = 20, model_name: str = "llama3.2:3b") -> list:
+    def query_graph_relationships(self, user_query: str, max_triplets: int = 20) -> list:
         """
         1. Extract and link entities from user query.
         2. Traverse 1-hop relationships (in both directions) for matched nodes.
@@ -314,7 +316,7 @@ class GraphRAGPipeline:
         """
 
         # 1. Reuse entity extraction & linking logic
-        extraction_result = self.extract_and_link_entities(user_query, model_name)
+        extraction_result = self.extract_and_link_entities(user_query)
         matched_nodes = extraction_result.get("matched_nodes", [])
 
         if not matched_nodes:
@@ -360,22 +362,21 @@ class GraphRAGPipeline:
 
 
 if __name__ == "__main__":
-    try:
         from time import time
         start_time = time()
-        search_engine = HybridSearchEngine(CORPUS)
-        pipeline = GraphRAGPipeline()
-        pipeline.neo4j_driver.verify_connectivity()
-        print("Successfully connected to Neo4j database!")
-        answer, formatted_context = pipeline.run_pipeline(QUERY, search_engine)
+        # search_engine = HybridSearchEngine(CORPUS)
+        pipeline = GraphRAGPipeline(CORPUS)
+        try:
+            pipeline.neo4j_driver.verify_connectivity()
+            print("Successfully connected to Neo4j database!")
+        except Exception as e:
+            print(f"Failed to connect to Neo4j: {e}")
+        formatted_context = pipeline.query_graph_relationships(QUERY)
         end_time = time()
         print(f"Time taken: {(end_time - start_time) * 1000} ms")
         print(f"\n--- FORMATTED FINAL CONTEXT FOR QUERY : {QUERY} ---")
         print(formatted_context)
-        print("\n--- FINAL ANSWER ---")
-        print(answer)
 
-        search_engine.close()
+        # search_engine.close()
         pipeline.neo4j_driver.close()
-    except Exception as e:
-        print(f"Failed to connect to Neo4j: {e}")
+    
