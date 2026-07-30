@@ -58,11 +58,11 @@ docker compose up -d --build
 
 | Commit | Author | Date | Message |
 | --- | --- | --- | --- |
-| `fd62f66` | Ushnesha Daripa | 2026-07-30 | code updated |
-| `a57dd4b` | Ushnesha Daripa | 2026-07-29 | docs: auto-update README [skip ci] |
-| `1bd7894` | Ushnesha Daripa | 2026-07-29 | llm model changed from meta to nousresearch due to gated access issue |
-| `3ad4e90` | Ushnesha Daripa | 2026-07-29 | docs: auto-update README [skip ci] |
-| `c67683f` | Ushnesha Daripa | 2026-07-29 | grapgrag_pipeline code updated to use vLLM chatOpenAI model |
+| `447ec90` | Ushnesha Daripa | 2026-07-30 | decoupled hybrid_search and graphrag pipeline |
+| `082578f` | Ushnesha Daripa | 2026-07-30 | Merge pull request #1 from Ushnesha/ush_remote |
+| `d43c633` | Ushnesha Daripa | 2026-07-30 | Delete .conda/pkgs directory |
+| `d6e68ee` | Ushnesha | 2026-07-30 | running hbybrid search |
+| `f996e49` | Ushnesha Daripa | 2026-07-30 | docs: auto-update README [skip ci] |
 
 
 ---
