@@ -6,6 +6,7 @@ from typing import List
 from pydantic import BaseModel, Field
 from neo4j import GraphDatabase
 from langchain_ollama import ChatOllama
+from langchain_openai import ChatOpenAI
 from hybrid_search_engine import HybridSearchEngine
 from config import CORPUS, QUERY
 
@@ -35,10 +36,16 @@ class GraphRAGPipeline:
     def __init__(self):
         self.search_engine = HybridSearchEngine(CORPUS)
         self.ollama_base_url = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
-        self.llm = ChatOllama(
-            model="llama3.2:3b",
-            temperature=0,
-            base_url=self.ollama_base_url
+        # self.llm = ChatOllama(
+        #     model="llama3.2:3b",
+        #     temperature=0,
+        #     base_url=self.ollama_base_url
+        # )
+        self.llm = ChatOpenAI(
+            model="meta-llama/Meta-Llama-3-8B-Instruct", 
+            openai_api_key="none",                          # vLLM doesn't require a real API key
+            openai_api_base="http://host.docker.internal:11434/v1",
+            temperature=0
         )
         self.structured_llm = self.llm.with_structured_output(GraphExtraction, method="json_mode")
         neo4j_uri = os.getenv("NEO4J_URI", "bolt://localhost:7687")

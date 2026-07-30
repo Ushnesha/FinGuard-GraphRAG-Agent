@@ -4,3 +4,4 @@ __pycache__/
 codeflow.md
 data/
 .env
+.DS_Store
