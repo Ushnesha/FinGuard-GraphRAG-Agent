@@ -55,7 +55,9 @@ class GraphRAGPipeline:
             model="meta-llama/Meta-Llama-3-8B-Instruct", 
             openai_api_key="none",                          # vLLM doesn't require a real API key
             openai_api_base=os.getenv("OPENAI_API_BASE", "http://localhost:11434/v1"),
-            temperature=0
+            temperature=0,
+            max_tokens=1000,
+            model_kwargs={"response_format": {"type": "json_object"}}
         )
         
         neo4j_uri = os.getenv("NEO4J_URI", "bolt://localhost:7687")
@@ -167,7 +169,7 @@ class GraphRAGPipeline:
         Allowed Entity Types: [COMPANY, BUSINESS_SEGMENT, FINANCIAL_METRIC, TIME_PERIOD]
         Allowed Relationship Types: [PART_OF, REPORTS, FOR_PERIOD, ACQUIRED]
 
-        You must format your response STRICTLY as a JSON object matching this structure:
+        You must format your response STRICTLY as a valid JSON object matching this structure:
         {{
             "entities": [
                 {{"name": "entity name", "type": "ENTITY_TYPE"}}
@@ -337,7 +339,7 @@ class GraphRAGPipeline:
         Extract all domain-specific entities from the following user query.
         Allowed Types: [COMPANY, BUSINESS_SEGMENT, FINANCIAL_METRIC, TIME_PERIOD]
 
-        You must format your response STRICTLY as a JSON object with this key structure:
+        You must format your response STRICTLY as a valid JSON object with this key structure:
         {{
             "entities": [
                 {{"text": "entity name", "type": "ENTITY_TYPE"}}
