@@ -11,7 +11,7 @@ from hybrid_search_engine import HybridSearchEngine
 from config import MEGA_CORPUS
 
 CORPUS = MEGA_CORPUS[0]["CORPUS"]
-QUERY = MEGA_CORPUS[0]["QUERY"][0]
+QUERY = MEGA_CORPUS[0]["QUERY"][1]
 
 # Define rigid schemas for structured output
 class Entity(BaseModel):
@@ -178,7 +178,7 @@ class GraphRAGPipeline:
     async def _knowledge_graph_builder(self, concurrency_limit: int = 10):
         print("Initializing Neo4j Knowledge dynamically from corpus...")
         # Programmatically write core entity linkages to Neo4j
-        strt = time.time()
+        strt = time()
 
         self._ensure_indexes()
 
@@ -218,7 +218,7 @@ class GraphRAGPipeline:
                 hash=self.corpus_hash
             )
         print("Graph initialization complete!")
-        print(f"Time taken for Graph Initialization: {(time.time()-strt)*1000}ms")
+        print(f"Time taken for Graph Initialization: {(time()-strt)*1000}ms")
 
 
 
@@ -360,10 +360,14 @@ class GraphRAGPipeline:
         response = self.llm.invoke(prompt).content
         return response, context_str
 
+    def delete_graph(self):
+        with self.neo4j_driver.session() as session:
+            # Clean database first
+            session.run("MATCH (n) DETACH DELETE n")
+
 
 if __name__ == "__main__":
         from time import time
-        start_time = time()
         # search_engine = HybridSearchEngine(CORPUS)
         pipeline = GraphRAGPipeline(CORPUS)
         try:
@@ -371,12 +375,12 @@ if __name__ == "__main__":
             print("Successfully connected to Neo4j database!")
         except Exception as e:
             print(f"Failed to connect to Neo4j: {e}")
+        start_time = time()
         formatted_context = pipeline.query_graph_relationships(QUERY)
-        end_time = time()
-        print(f"Time taken: {(end_time - start_time) * 1000} ms")
+        print(f"Time taken to extract query context from graph: {(time() - start_time) * 1000} ms")
         print(f"\n--- FORMATTED FINAL CONTEXT FOR QUERY : {QUERY} ---")
         print(formatted_context)
-
+        # pipeline.delete_graph()
         # search_engine.close()
         pipeline.neo4j_driver.close()
     
