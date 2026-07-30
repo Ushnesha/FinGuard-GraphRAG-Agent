@@ -37,9 +37,13 @@ class QueryExtractionResult(BaseModel):
 
 class GraphRAGPipeline:
     def __init__(self, documents: list = CORPUS):
-        self.documents = documents
-        corpus_str = "".join(sorted(self.documents))
+        self.raw_documents = documents
+        corpus_str = "".join(sorted(self.raw_documents))
         self.corpus_hash = hashlib.md5(corpus_str.encode("utf-8")).hexdigest()
+        
+        self.documents = []
+        for doc in self.raw_documents:
+            self.documents.extend(self._chunk_document(doc))
         
         self.ollama_base_url = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
         # self.llm = ChatOllama(
@@ -79,6 +83,27 @@ class GraphRAGPipeline:
                 return True
                 
             return False
+
+    def _chunk_document(self, doc: str, max_chars: int = 600, overlap: int = 120) -> list:
+        """Chunks large text documents into smaller sliding-window pieces with overlap."""
+        chunks = []
+        start = 0
+        while start < len(doc):
+            end = start + max_chars
+            if end < len(doc):
+                # Try to split nicely on a newline or space boundary
+                boundary = doc.rfind("\n", end - 150, end)
+                if boundary == -1:
+                    boundary = doc.rfind(" ", end - 50, end)
+                if boundary != -1:
+                    end = boundary
+            chunks.append(doc[start:end].strip())
+            start = end - overlap
+            if start >= len(doc) or end >= len(doc):
+                break
+            if start <= 0 or start == end - overlap:
+                start = end
+        return [c for c in chunks if c]
         
 
     def _ensure_indexes(self):
@@ -113,13 +138,44 @@ class GraphRAGPipeline:
         3. CRITICAL: Every element in the "entities" list MUST be a full object with "name" and "type". Under NO circumstances should you return plain strings in the "entities" list.
         4. If no entities or relationships are found, return empty lists: {{"entities": [], "relationships": []}}
         
+        Return ONLY valid JSON. Do not include any explanation or markdown formatting outside of the JSON block.
+        
         Text:
         "{doc}"
         """
         try:
-            # Using structured output guarantees clean data directly matching the Pydantic schema
-            graphEx_structured_llm = self.llm.with_structured_output(GraphExtraction, method="json_mode")
-            return await graphEx_structured_llm.ainvoke(prompt)
+            # Direct invocation without structured output wrapper to avoid guided decoding overhead
+            response = await self.llm.ainvoke(prompt)
+            content = response.content.strip()
+            
+            # Clean up markdown code wraps if present
+            if content.startswith("```json"):
+                content = content[7:]
+            if content.startswith("```"):
+                content = content[3:]
+            if content.endswith("```"):
+                content = content[:-3]
+            content = content.strip()
+            
+            data = json.loads(content)
+            
+            # Manually map to Pydantic models for type safety with the downstream code
+            entities = []
+            for item in data.get("entities", []):
+                if isinstance(item, dict) and "name" in item and "type" in item:
+                    entities.append(Entity(name=str(item["name"]), type=str(item["type"])))
+                    
+            relationships = []
+            for item in data.get("relationships", []):
+                if isinstance(item, dict) and "source" in item and "type" in item and "target" in item:
+                    relationships.append(
+                        Relationship(
+                            source=str(item["source"]),
+                            type=str(item["type"]),
+                            target=str(item["target"])
+                        )
+                    )
+            return GraphExtraction(entities=entities, relationships=relationships)
         except Exception as e:
             print(f"Error extracting chunk: {e}")
             return GraphExtraction(entities=[], relationships=[])
@@ -243,20 +299,36 @@ class GraphRAGPipeline:
             ]
         }}
 
+        Return ONLY valid JSON. Do not include any explanation or markdown formatting outside of the JSON block.
+
         Query: "{user_query}"
         """
-        qEx_structured_llm = self.llm.with_structured_output(QueryExtractionResult, method="json_mode")
         # 1. LLM Extraction
         try:
-            extraction = qEx_structured_llm.invoke(prompt)
+            response = self.llm.invoke(prompt)
+            content = response.content.strip()
+            
+            # Clean up markdown code wraps if present
+            if content.startswith("```json"):
+                content = content[7:]
+            if content.startswith("```"):
+                content = content[3:]
+            if content.endswith("```"):
+                content = content[:-3]
+            content = content.strip()
+            
+            data = json.loads(content)
+            
+            normalized_entities = []
+            for item in data.get("entities", []):
+                if isinstance(item, dict) and "text" in item and "type" in item:
+                    normalized_entities.append({
+                        "text": str(item["text"]).lower().strip(),
+                        "type": str(item["type"]).upper().strip()
+                    })
         except Exception as e:
             print(f"Extraction failed: {e}")
             return {"raw_entities": [], "matched_nodes": []}
-
-        normalized_entities = [
-            {"text": e.text.lower().strip(), "type": e.type.upper().strip()}
-            for e in extraction.entities
-        ]
 
         if not normalized_entities:
             return {"raw_entities": [], "matched_nodes": []}
