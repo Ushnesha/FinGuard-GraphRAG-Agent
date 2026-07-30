@@ -58,11 +58,11 @@ docker compose up -d --build
 
 | Commit | Author | Date | Message |
 | --- | --- | --- | --- |
+| `fd62f66` | Ushnesha Daripa | 2026-07-30 | code updated |
+| `a57dd4b` | Ushnesha Daripa | 2026-07-29 | docs: auto-update README [skip ci] |
 | `1bd7894` | Ushnesha Daripa | 2026-07-29 | llm model changed from meta to nousresearch due to gated access issue |
 | `3ad4e90` | Ushnesha Daripa | 2026-07-29 | docs: auto-update README [skip ci] |
 | `c67683f` | Ushnesha Daripa | 2026-07-29 | grapgrag_pipeline code updated to use vLLM chatOpenAI model |
-| `b4c64f2` | Ushnesha Daripa | 2026-07-28 | docs: auto-update README [skip ci] |
-| `e53e2c4` | Ushnesha Daripa | 2026-07-28 | input guardrail implemented |
 
 
 ---
