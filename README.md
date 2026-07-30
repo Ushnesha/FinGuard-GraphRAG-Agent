@@ -58,11 +58,11 @@ docker compose up -d --build
 
 | Commit | Author | Date | Message |
 | --- | --- | --- | --- |
-| `447ec90` | Ushnesha Daripa | 2026-07-30 | decoupled hybrid_search and graphrag pipeline |
-| `082578f` | Ushnesha Daripa | 2026-07-30 | Merge pull request #1 from Ushnesha/ush_remote |
-| `d43c633` | Ushnesha Daripa | 2026-07-30 | Delete .conda/pkgs directory |
-| `d6e68ee` | Ushnesha | 2026-07-30 | running hbybrid search |
-| `f996e49` | Ushnesha Daripa | 2026-07-30 | docs: auto-update README [skip ci] |
+| `a3e268e` | Ushnesha Daripa | 2026-07-30 | code added for document chunking |
+| `002519a` | Ushnesha Daripa | 2026-07-30 | Merge pull request #4 from Ushnesha/ush_remote |
+| `a086d66` | Ushnesha | 2026-07-30 | code updated |
+| `c15b36b` | Ushnesha Daripa | 2026-07-30 | Merge pull request #3 from Ushnesha/ush_remote |
+| `f69a413` | Ushnesha | 2026-07-30 | code updated |
 
 
 ---

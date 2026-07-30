@@ -22,9 +22,13 @@ QUERY = MEGA_CORPUS[0]["QUERY"][0]
 
 class HybridSearchEngine:
     def __init__(self, documents: list):
-        self.documents = documents
-        corpus_str = "".join(sorted(self.documents))
+        self.raw_documents = documents
+        corpus_str = "".join(sorted(self.raw_documents))
         self.corpus_hash = hashlib.md5(corpus_str.encode("utf-8")).hexdigest()
+
+        self.documents = []
+        for doc in self.raw_documents:
+            self.documents.extend(self._chunk_document(doc))
 
         # Initialize Hugging Face Embeddings with dynamic device fallback (mps for host, cpu for docker)
         import torch
@@ -91,6 +95,27 @@ class HybridSearchEngine:
     def _tokenize(self, text: str) -> list:
         """Standardized tokenizer for BM25 (strips punctuation and downcases)."""
         return re.findall(r"\w+", text.lower())
+
+    def _chunk_document(self, doc: str, max_chars: int = 600, overlap: int = 120) -> list:
+        """Chunks large text documents into smaller sliding-window pieces with overlap."""
+        chunks = []
+        start = 0
+        while start < len(doc):
+            end = start + max_chars
+            if end < len(doc):
+                # Try to split nicely on a newline or space boundary
+                boundary = doc.rfind("\n", end - 150, end)
+                if boundary == -1:
+                    boundary = doc.rfind(" ", end - 50, end)
+                if boundary != -1:
+                    end = boundary
+            chunks.append(doc[start:end].strip())
+            start = end - overlap
+            if start >= len(doc) or end >= len(doc):
+                break
+            if start <= 0 or start == end - overlap:
+                start = end
+        return [c for c in chunks if c]
 
 
         
