@@ -127,12 +127,23 @@ class StateAgent:
         # ONLY build the plan if it is None (uninitialized)
         if plan is None:
             plan = []
+            # Detect if the query requires quantitative operations
+            needs_math = any(word in state["query"].lower() for word in [
+                "percent", "grow", "increase", "decline", "decrease", "cagr", 
+                "calculate", "sum", "average", "total", "difference", "math"
+            ])
+            
             if intent == "kg_search":
                 plan.append("kg_agent")
+                if needs_math:
+                    plan.append("data_analyst")
             elif intent == "web_search":
                 plan.append("web_agent")
+                if needs_math:
+                    plan.append("data_analyst")
             elif intent == "math_synthesis":
-                plan.append("data_analyst")
+                # For pure math synthesis, retrieve local data first, then run calculations
+                plan.extend(["kg_agent", "data_analyst"])
             elif intent == "general":
                 plan.append("kg_agent")
             else:
@@ -216,12 +227,17 @@ class StateAgent:
         if not api_key:
             print("[Web Agent] Warning: TAVILY_API_KEY not found in environment. Falling back to kg_search.")
             # If we already tried kg_search, do not loop back to it
-            if "kg_agent" not in attempted_nodes:
+            if "kg_agent" in attempted_nodes:
                 print("[Web Agent] Fallback to kg_agent skipped (already attempted). Routing to Response synthesis.")
-                return {"intent": "general", "plan": [], "attempted_nodes": ["web_agent"]}
+                return {"intent": "general", "plan": [], "attempted_nodes": attempted_nodes + ["web_agent"]}
             # Otherwise, fall back to kg_search
             print("[Web Agent] Falling back to kg_search.")
-            return {"intent": "kg_search", "plan": ["kg_agent"], "attempted": attempted_nodes + ["web_agent"]}
+            remaining_plan = state.get("plan", []) or []
+            return {
+                "intent": "kg_search",
+                "plan": ["kg_agent"] + remaining_plan,
+                "attempted_nodes": attempted_nodes + ["web_agent"]
+            }
 
         print("[Worker: Web Agent] Querying external web search...")
         findings = self._query_tavily(state["query"], api_key=api_key)
@@ -443,7 +459,7 @@ if __name__ == "__main__":
     
     print("\n--- RUNNING SAFE TRANSACTION ---")
     QUERY = MEGA_CORPUS[0]["QUERY"][0]
-    web_query= "What was Nvidia's total revenue for the last fiscal quarter of 2025?"
+    web_query = "What was the percentage decline in net revenue for Entergy Louisiana from 2007 to 2008?"
     safe_run_state = agent.run(query=web_query)
     print(f"Output: {safe_run_state['final_output']}")
     
