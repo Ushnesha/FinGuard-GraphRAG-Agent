@@ -1,8 +1,10 @@
 # phase3_agentic.py
 import os
 import json
+import sys
 import re
 import urllib.request
+from io import StringIO
 from typing import TypedDict, List, Literal
 from langgraph.graph import StateGraph, END
 from langchain_openai import ChatOpenAI
@@ -24,7 +26,7 @@ class PipelineState(TypedDict):
     final_output: str
     is_safe: bool
     tokens: dict
-    atempted_nodes : List[str] # to track already executed agents
+    attempted_nodes : List[str] # to track already executed agents
 
 class StateAgent:
     def __init__(self):
@@ -74,6 +76,7 @@ class StateAgent:
             f"Intent classification rules (select exactly one):\n"
             f"- 'kg_search': ONLY for internal, private company records (e.g. employee names, internal department structure, internal projects like Alpha, manager identities).\n"
             f"- 'web_search': For public external facts, public company financials (e.g. Nvidia, Apple, Intel revenue or stock), recent news, or general knowledge.\n"
+            f"- 'math_synthesis': arithmetic, quantitative summaries, code analysis, math equations, or table formatting.\n"
             f"- 'general': basic conversational greetings or general non-technical prompts.\n\n"
             f"User query to audit: '{state['query']}'\n\n"
             f"Respond ONLY with a valid JSON object. Do not include markdown backticks or explanation.\n"
@@ -128,8 +131,8 @@ class StateAgent:
                 plan.append("kg_agent")
             elif intent == "web_search":
                 plan.append("web_agent")
-            # elif intent == "math_synthesis":
-            #     plan.append("data_analyst")
+            elif intent == "math_synthesis":
+                plan.append("data_analyst")
             elif intent == "general":
                 plan.append("kg_agent")
             else:
@@ -138,7 +141,7 @@ class StateAgent:
                     f"You are a supervisor managing three worker agents:\n"
                     f"1. 'kg_agent' (performs internal graph database and document queries)\n"
                     f"2. 'web_agent' (searches the web for recent context or external facts)\n"
-                    # f"3. 'data_analyst' (runs Python scripts to execute calculations or format tables)\n\n"
+                    f"3. 'data_analyst' (runs Python scripts to execute calculations or format tables)\n\n"
                     f"Query to plan: '{state['query']}'\n\n"
                     f"Determine a list of agent names that need to run in sequence to answer this query.\n"
                     f"Respond ONLY with a JSON list of agent names. Do not include markdown backticks or explanation. Example:\n"
@@ -226,6 +229,84 @@ class StateAgent:
         attempted_nodes = state.get("attempted_nodes", []) or []
         return {"agent_outputs": outputs + [findings], "attempted_nodes": attempted_nodes + ["web_agent"]}
 
+
+    def _run_restricted_python(self, code_str: str) -> str:
+        """Runs python operations in a captured execution environment."""
+        code_str = code_str.strip()
+        if code_str.startswith("```python"):
+            code_str = code_str[9:]
+        if code_str.startswith("```"):
+            code_str = code_str[3:]
+        if code_str.endswith("```"):
+            code_str = code_str[:-3]
+        code_str = code_str.strip()
+        local_vars = {}
+        global_vars = {
+            "__builtins__": __builtins__,
+            "math": __import__("math"),
+            "json": __import__("json"),
+            "re": __import__("re"),
+            "datetime": __import__("datetime")
+        }
+        
+        old_stdout = sys.stdout
+        redirected_output = StringIO()
+        sys.stdout = redirected_output
+        
+        try:
+            exec(code_str, global_vars, local_vars)
+            if "run" in local_vars:
+                res = local_vars["run"]()
+                printed = redirected_output.getvalue()
+                sys.stdout = old_stdout
+                return f"Execution result: {res}\nPrinted:\n{printed}" if printed else f"Execution result: {res}"
+            else:
+                printed = redirected_output.getvalue()
+                sys.stdout = old_stdout
+                return f"Execution succeeded. Printed:\n{printed}" if printed else "Execution succeeded (no printed logs)."
+        except Exception as e:
+            sys.stdout = old_stdout
+            return f"Execution failed. Error: {str(e)}\nAttempted Script:\n{code_str}"
+
+    def data_analyst_node(self, state: PipelineState):
+        """Worker Agent: Code generator and execution engine for quantitative calculations and formatting."""
+        print("[Worker: Data Analyst] Generating and executing quantitative code...")
+        
+        outputs_str = "\n".join(state.get("agent_outputs", []))
+        prompt = (
+            f"You are a Python Data Analyst agent.\n"
+            f"Based on the query and any context gathered so far, write a Python script to compute math operations, process numbers, or format markdown tables.\n\n"
+            f"User Query: '{state['query']}'\n\n"
+            f"Context Gathered So Far:\n{outputs_str}\n\n"
+            f"Requirements:\n"
+            f"1. You MUST define a function `run()` that performs the execution and returns a string (e.g. calculated result or formatted table).\n"
+            f"2. Keep the script self-contained. Do not rely on undefined external variables.\n"
+            f"3. Return ONLY executable python code. Do not wrap in markdown code blocks or add explanation text.\n"
+        )
+        
+        response = self.llm.invoke(prompt)
+        script = response.content.strip()
+        
+        exec_res = self._run_restricted_python(script)
+        
+        findings = (
+            f"=== Data Analyst Calculations ===\n"
+            f"Executed Script:\n{script}\n\n"
+            f"Results:\n{exec_res}\n"
+        )
+        
+        outputs = state.get("agent_outputs", []) or []
+        attempted_nodes = state.get("attempted_nodes", []) or []
+        
+        prompt_tokens, completion_tokens = self._extract_tokens(response)
+        tokens = state.get("tokens", {"prompt_tokens": 0, "completion_tokens": 0}).copy()
+        tokens["prompt_tokens"] += prompt_tokens
+        tokens["completion_tokens"] += completion_tokens
+        
+        return {"agent_outputs": outputs + [findings], "tokens": tokens, "attempted_nodes": attempted_nodes + ["data_analyst"]}
+
+
+
     def response_node(self, state: PipelineState):
         """Compiles facts into a verified response."""
         print("[Node: Response] Formulating response...")
@@ -308,6 +389,7 @@ class StateAgent:
         workflow.add_node("supervisor", self.supervisor_node)
         workflow.add_node("kg_agent", self.kg_agent_node)
         workflow.add_node("web_agent", self.web_agent_node)
+        workflow.add_node("data_analyst", self.data_analyst_node)
         workflow.add_node("response", self.response_node)
         workflow.add_node("output_guardrail", self.output_guardrail_node)
         
@@ -318,7 +400,7 @@ class StateAgent:
                 return END
             return "supervisor"
 
-        def route_from_supervisor(state: PipelineState) -> Literal["kg_agent", "web_agent", "response"]:
+        def route_from_supervisor(state: PipelineState) -> Literal["kg_agent", "web_agent", "response", "data_analyst"]:
             return state["next_node"]
 
         def route_from_response(state: PipelineState) -> Literal["output_guardrail", "supervisor"]:
@@ -329,10 +411,15 @@ class StateAgent:
         # Map Edges
         workflow.set_entry_point("guardrail")
         workflow.add_conditional_edges("guardrail", route_by_safety, {"supervisor": "supervisor", END: END})
-        workflow.add_conditional_edges("supervisor", route_from_supervisor, {"kg_agent": "kg_agent","web_agent": "web_agent", "response": "response"})
+
+        workflow.add_conditional_edges("supervisor", route_from_supervisor, {"kg_agent": "kg_agent","web_agent": "web_agent", "response": "response", "data_analyst": "data_analyst"})
+
         workflow.add_edge("kg_agent", "supervisor")
         workflow.add_edge("web_agent", "supervisor")
+        workflow.add_edge("data_analyst", "supervisor")
+        
         workflow.add_conditional_edges("response", route_from_response, {"output_guardrail": "output_guardrail", "supervisor": "supervisor"})
+
         workflow.add_edge("output_guardrail", END)
         
         return workflow.compile()
@@ -347,7 +434,7 @@ class StateAgent:
             "next_node": "",
             "final_output": "",
             "tokens": {"prompt_tokens": 0, "completion_tokens": 0},
-            "atempted_nodes" : []
+            "attempted_nodes" : []
         }
         return self.graph_workflow.invoke(initial_state)
 
