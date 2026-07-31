@@ -58,11 +58,11 @@ docker compose up -d --build
 
 | Commit | Author | Date | Message |
 | --- | --- | --- | --- |
+| `aa34a1d` | Ushnesha Daripa | 2026-07-31 | implemented data analyst node for any python scripting code run |
+| `e4f95cb` | Ushnesha Daripa | 2026-07-31 | docs: auto-update README [skip ci] |
 | `cb645df` | Ushnesha Daripa | 2026-07-31 | implemented CRAG - corrective RAG and self correction loop |
 | `62cf5da` | Ushnesha Daripa | 2026-07-31 | docs: auto-update README [skip ci] |
 | `520ecfb` | Ushnesha Daripa | 2026-07-31 | added web_serach agentic node |
-| `1f69685` | Ushnesha Daripa | 2026-07-31 | docs: auto-update README [skip ci] |
-| `8ce383d` | Ushnesha Daripa | 2026-07-31 | code updated for graphrag pipeline in agentic |
 
 
 ---
