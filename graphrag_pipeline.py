@@ -11,7 +11,7 @@ from hybrid_search_engine import HybridSearchEngine
 from config import MEGA_CORPUS
 
 CORPUS = MEGA_CORPUS[0]["CORPUS"]
-QUERY = MEGA_CORPUS[0]["QUERY"][1]
+QUERY = MEGA_CORPUS[0]["QUERY"][0]
 
 # Define rigid schemas for structured output
 class Entity(BaseModel):
@@ -36,7 +36,7 @@ class QueryExtractionResult(BaseModel):
 
 
 class GraphRAGPipeline:
-    def __init__(self, documents: list = CORPUS):
+    def __init__(self, neo4j_driver, documents: list = CORPUS):
         self.raw_documents = documents
         corpus_str = "".join(sorted(self.raw_documents))
         self.corpus_hash = hashlib.md5(corpus_str.encode("utf-8")).hexdigest()
@@ -56,16 +56,11 @@ class GraphRAGPipeline:
             openai_api_key="none",                          # vLLM doesn't require a real API key
             openai_api_base=os.getenv("OPENAI_API_BASE", "http://localhost:11434/v1"),
             temperature=0,
-            max_tokens=1000
+            max_tokens=2000
         )
         self.json_llm = self.llm.bind(response_format={"type": "json_object"})
         
-        neo4j_uri = os.getenv("NEO4J_URI", "bolt://localhost:7687")
-        neo4j_user = os.getenv("NEO4J_USER", "neo4j")
-        neo4j_password = os.getenv("NEO4J_PASSWORD", "password123")
-        self.neo4j_driver = GraphDatabase.driver(
-            neo4j_uri, auth=(neo4j_user, neo4j_password)
-        )
+        self.neo4j_driver = neo4j_driver
         if self._is_graph_initialize_needed():
             self._initialize_knowledge_graph()
 
@@ -278,7 +273,7 @@ class GraphRAGPipeline:
 
 
 
-    async def _knowledge_graph_builder(self, concurrency_limit: int = 10):
+    async def _knowledge_graph_builder(self, concurrency_limit: int = 60):
         print("Initializing Neo4j Knowledge dynamically from corpus...")
         # Programmatically write core entity linkages to Neo4j
         strt = time()
@@ -479,27 +474,33 @@ class GraphRAGPipeline:
         response = self.llm.invoke(prompt).content
         return response, context_str
 
-    def delete_graph(self):
-        with self.neo4j_driver.session() as session:
-            # Clean database first
-            session.run("MATCH (n) DETACH DELETE n")
+def delete_graph(neo4j_driver):
+    with neo4j_driver.session() as session:
+        # Clean database first
+        session.run("MATCH (n) DETACH DELETE n")
 
 
 if __name__ == "__main__":
         from time import time
         # search_engine = HybridSearchEngine(CORPUS)
-        pipeline = GraphRAGPipeline(CORPUS)
+        neo4j_uri = os.getenv("NEO4J_URI", "bolt://localhost:7687")
+        neo4j_user = os.getenv("NEO4J_USER", "neo4j")
+        neo4j_password = os.getenv("NEO4J_PASSWORD", "password123")
+        neo4j_driver = GraphDatabase.driver(
+            neo4j_uri, auth=(neo4j_user, neo4j_password)
+        )
         try:
-            pipeline.neo4j_driver.verify_connectivity()
+            neo4j_driver.verify_connectivity()
             print("Successfully connected to Neo4j database!")
         except Exception as e:
             print(f"Failed to connect to Neo4j: {e}")
         start_time = time()
+        pipeline = GraphRAGPipeline(neo4j_driver, CORPUS)
         formatted_context = pipeline.query_graph_relationships(QUERY)
         print(f"Time taken to extract query context from graph: {(time() - start_time) * 1000} ms")
         print(f"\n--- FORMATTED FINAL CONTEXT FOR QUERY : {QUERY} ---")
         print(formatted_context)
-        # pipeline.delete_graph()
+        # delete_graph(neo4j_driver)
         # search_engine.close()
-        pipeline.neo4j_driver.close()
+        neo4j_driver.close()
     
