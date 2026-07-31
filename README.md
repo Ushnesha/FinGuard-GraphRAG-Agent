@@ -58,11 +58,11 @@ docker compose up -d --build
 
 | Commit | Author | Date | Message |
 | --- | --- | --- | --- |
+| `3310bdf` | Ushnesha Daripa | 2026-07-31 | strict 1x1 mapping avoided in intent classifying |
+| `dd96152` | Ushnesha Daripa | 2026-07-31 | docs: auto-update README [skip ci] |
 | `aa34a1d` | Ushnesha Daripa | 2026-07-31 | implemented data analyst node for any python scripting code run |
 | `e4f95cb` | Ushnesha Daripa | 2026-07-31 | docs: auto-update README [skip ci] |
 | `cb645df` | Ushnesha Daripa | 2026-07-31 | implemented CRAG - corrective RAG and self correction loop |
-| `62cf5da` | Ushnesha Daripa | 2026-07-31 | docs: auto-update README [skip ci] |
-| `520ecfb` | Ushnesha Daripa | 2026-07-31 | added web_serach agentic node |
 
 
 ---
