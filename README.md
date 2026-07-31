@@ -58,11 +58,11 @@ docker compose up -d --build
 
 | Commit | Author | Date | Message |
 | --- | --- | --- | --- |
+| `cb645df` | Ushnesha Daripa | 2026-07-31 | implemented CRAG - corrective RAG and self correction loop |
+| `62cf5da` | Ushnesha Daripa | 2026-07-31 | docs: auto-update README [skip ci] |
 | `520ecfb` | Ushnesha Daripa | 2026-07-31 | added web_serach agentic node |
 | `1f69685` | Ushnesha Daripa | 2026-07-31 | docs: auto-update README [skip ci] |
 | `8ce383d` | Ushnesha Daripa | 2026-07-31 | code updated for graphrag pipeline in agentic |
-| `23ab3cf` | Ushnesha Daripa | 2026-07-30 | Merge pull request #12 from Ushnesha/ush_remote |
-| `71a1f07` | Ushnesha | 2026-07-30 | kg_search node added with supervisor node in agentic graph |
 
 
 ---
