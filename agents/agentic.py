@@ -466,9 +466,10 @@ if __name__ == "__main__":
     agent = StateAgent()
     
     print("\n--- RUNNING SAFE TRANSACTION ---")
-    QUERY = MEGA_CORPUS[0]["QUERY"][0]
-    web_query = "What was the percentage decline in net revenue for Entergy Louisiana from 2007 to 2008?"
-    safe_run_state = agent.run(query=web_query)
+    kg_query = MEGA_CORPUS[0]["QUERY"][0]
+    web_query= "What was Nvidia's total revenue for the last fiscal quarter of 2025?"
+    math_query = "What was the percentage decline in net revenue for Entergy Louisiana from 2007 to 2008?"
+    safe_run_state = agent.run(query=math_query)
     print(f"Output: {safe_run_state['final_output']}")
     
     # print("\n--- RUNNING MALICIOUS TRANSACTION ---")
