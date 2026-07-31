@@ -56,12 +56,9 @@ class GraphRAGPipeline:
             openai_api_key="none",                          # vLLM doesn't require a real API key
             openai_api_base=os.getenv("OPENAI_API_BASE", "http://localhost:11434/v1"),
             temperature=0,
-            max_tokens=1000,
-            model_kwargs={
-                "response_format": {"type": "json_object"},
-                "stop": ["<|eot_id|>", "<|end_of_text|>"]
-            }
+            max_tokens=1000
         )
+        self.json_llm = self.llm.bind(response_format={"type": "json_object"})
         
         neo4j_uri = os.getenv("NEO4J_URI", "bolt://localhost:7687")
         neo4j_user = os.getenv("NEO4J_USER", "neo4j")
@@ -195,7 +192,7 @@ class GraphRAGPipeline:
         """
         try:
             # Direct invocation without structured output wrapper to avoid guided decoding overhead
-            response = await self.llm.ainvoke(prompt)
+            response = await self.json_llm.ainvoke(prompt, stop=["<|eot_id|>", "<|end_of_text|>"])
             content = response.content.strip()
             
             # Clean up markdown code wraps if present
@@ -355,7 +352,7 @@ class GraphRAGPipeline:
         """
         # 1. LLM Extraction
         try:
-            response = self.llm.invoke(prompt)
+            response = self.json_llm.invoke(prompt, stop=["<|eot_id|>", "<|end_of_text|>"])
             content = response.content.strip()
             
             # Clean up markdown code wraps if present
