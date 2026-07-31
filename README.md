@@ -58,11 +58,11 @@ docker compose up -d --build
 
 | Commit | Author | Date | Message |
 | --- | --- | --- | --- |
-| `43c29d3` | Ushnesha Daripa | 2026-07-30 | code updated |
-| `0041ae7` | Ushnesha Daripa | 2026-07-30 | docs: auto-update README [skip ci] |
-| `1663ef7` | Ushnesha Daripa | 2026-07-30 | vllm llm constraints for token generation |
-| `d6fb699` | Ushnesha Daripa | 2026-07-30 | docs: auto-update README [skip ci] |
-| `e7cc789` | Ushnesha Daripa | 2026-07-30 | remove slow structured llm output |
+| `bd2b9fe` | Ushnesha Daripa | 2026-07-30 | chunk truncation bypass code added |
+| `5914df7` | Ushnesha Daripa | 2026-07-30 | Merge pull request #10 from Ushnesha/ush_remote |
+| `f8ac0bd` | Ushnesha | 2026-07-30 | code optimization |
+| `746d0a3` | Ushnesha Daripa | 2026-07-30 | Merge pull request #9 from Ushnesha/ush_local |
+| `c22914c` | Ushnesha Daripa | 2026-07-30 | docs: auto-update README [skip ci] |
 
 
 ---
