@@ -3,7 +3,7 @@ import json
 import asyncio
 import hashlib
 from langchain_openai import ChatOpenAI
-from config import MEGA_CORPUS
+from app.config import MEGA_CORPUS
 
 CORPUS = MEGA_CORPUS[0]["CORPUS"]
 

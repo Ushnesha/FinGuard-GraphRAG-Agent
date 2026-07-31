@@ -5,9 +5,9 @@ import urllib.request
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
-from pydantic import BaseModel
-from agentic import StateAgent
-from app.cache import RedisCache
+from agents.agentic import StateAgent
+from services.semantic_cache import RedisCache
+from app.models import QueryRequest
 
 app = FastAPI(title="Autonomous Enterprise Analyst API")
 
@@ -22,11 +22,6 @@ app.add_middleware(
 
 agent = StateAgent()
 cache = RedisCache()
-
-class QueryRequest(BaseModel):
-    user_id: str
-    query: str
-    model: str = "llama3"
 
 def get_ollama_models():
     ollama_base = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")

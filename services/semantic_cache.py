@@ -1,12 +1,12 @@
 import os
 import json
 import redis
+from app.config import REDIS_URL
 
 class RedisCache:
     def __init__(self):
-        redis_url = os.getenv("REDIS_URL", "redis://localhost:6379/0")
         try:
-            self.client = redis.Redis.from_url(url=redis_url,socket_timeout=2)
+            self.client = redis.Redis.from_url(url=REDIS_URL, socket_timeout=2)
             self.client.ping()
         except redis.ConnectionError:
             self.client = None

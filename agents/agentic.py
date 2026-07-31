@@ -8,9 +8,20 @@ from io import StringIO
 from typing import TypedDict, List, Literal
 from langgraph.graph import StateGraph, END
 from langchain_openai import ChatOpenAI
-from graphrag_pipeline import GraphRAGPipeline
-from hybrid_search_engine import HybridSearchEngine
-from config import MEGA_CORPUS
+from services.rag_pipeline import GraphRAGPipeline
+from components.hybrid_retriever import HybridSearchEngine
+from app.config import (
+    MEGA_CORPUS,
+    NEO4J_URI,
+    NEO4J_USER,
+    NEO4J_PASSWORD,
+    OPENAI_API_BASE,
+    LLM_MODEL,
+    LLM_TEMPERATURE,
+    LLM_MAX_TOKENS,
+    TAVILY_API_KEY,
+    TAVILY_API_URL
+)
 
 CORPUS = MEGA_CORPUS[0]["CORPUS"]
 
@@ -33,18 +44,15 @@ class StateAgent:
         self.search_engine = HybridSearchEngine(CORPUS)
 
         from neo4j import GraphDatabase
-        neo4j_uri = os.getenv("NEO4J_URI", "bolt://localhost:7687")
-        neo4j_user = os.getenv("NEO4J_USER", "neo4j")
-        neo4j_password = os.getenv("NEO4J_PASSWORD", "password123")
-        self.neo4j_driver = GraphDatabase.driver(neo4j_uri, auth=(neo4j_user, neo4j_password))
+        self.neo4j_driver = GraphDatabase.driver(NEO4J_URI, auth=(NEO4J_USER, NEO4J_PASSWORD))
 
         self.rag_pipeline = GraphRAGPipeline(self.neo4j_driver, CORPUS)
         self.llm = ChatOpenAI(
-                    model="meta-llama/Meta-Llama-3-8B-Instruct", 
+                    model=LLM_MODEL, 
                     openai_api_key="none",                          # vLLM doesn't require a real API key
-                    openai_api_base=os.getenv("OPENAI_API_BASE", "http://localhost:11434/v1"),
-                    temperature=0,
-                    max_tokens=2000
+                    openai_api_base=OPENAI_API_BASE,
+                    temperature=LLM_TEMPERATURE,
+                    max_tokens=LLM_MAX_TOKENS
                 )
         self.json_llm = self.llm.bind(response_format={"type": "json_object"})
         self.graph_workflow = self._build_state_graph()
@@ -199,7 +207,7 @@ class StateAgent:
 
     def _query_tavily(self, query: str, api_key: str) -> str:
 
-        url = "https://api.tavily.com/search"
+        url = TAVILY_API_URL
         payload = {
             "api_key": api_key,
             "query": query,
@@ -222,7 +230,7 @@ class StateAgent:
 
     def web_agent_node(self, state: PipelineState):
         """Worker Agent: Searches Tavily for current external context."""
-        api_key = os.getenv("TAVILY_API_KEY")
+        api_key = os.getenv("TAVILY_API_KEY") or TAVILY_API_KEY
         attempted_nodes = state.get("attempted_nodes", []) or []
         if not api_key:
             print("[Web Agent] Warning: TAVILY_API_KEY not found in environment. Falling back to kg_search.")
@@ -440,7 +448,7 @@ class StateAgent:
         
         return workflow.compile()
 
-    def run(self, query: str):
+    def run(self, query: str, model: str = None):
         initial_state = {
             "query": query,
             "intent": "",

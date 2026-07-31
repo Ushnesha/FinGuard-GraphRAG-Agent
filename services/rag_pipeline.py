@@ -7,8 +7,8 @@ from pydantic import BaseModel, Field
 from neo4j import GraphDatabase
 from langchain_ollama import ChatOllama
 from langchain_openai import ChatOpenAI
-from hybrid_search_engine import HybridSearchEngine
-from config import MEGA_CORPUS
+from components.hybrid_retriever import HybridSearchEngine
+from app.config import MEGA_CORPUS
 
 CORPUS = MEGA_CORPUS[0]["CORPUS"]
 QUERY = MEGA_CORPUS[0]["QUERY"][0]
