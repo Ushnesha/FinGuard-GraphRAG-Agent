@@ -57,7 +57,10 @@ class GraphRAGPipeline:
             openai_api_base=os.getenv("OPENAI_API_BASE", "http://localhost:11434/v1"),
             temperature=0,
             max_tokens=1000,
-            model_kwargs={"response_format": {"type": "json_object"}}
+            model_kwargs={
+                "response_format": {"type": "json_object"},
+                "stop": ["<|eot_id|>", "<|end_of_text|>"]
+            }
         )
         
         neo4j_uri = os.getenv("NEO4J_URI", "bolt://localhost:7687")
