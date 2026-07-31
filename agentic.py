@@ -2,6 +2,7 @@
 import os
 import json
 import re
+import urllib.request
 from typing import TypedDict, List, Literal
 from langgraph.graph import StateGraph, END
 from langchain_openai import ChatOpenAI
@@ -124,8 +125,8 @@ class StateAgent:
             plan = []
             if intent == "kg_search":
                 plan.append("kg_agent")
-            # elif intent == "web_search":
-            #     plan.append("web_agent")
+            elif intent == "web_search":
+                plan.append("web_agent")
             # elif intent == "math_synthesis":
             #     plan.append("data_analyst")
             elif intent == "general":
@@ -135,7 +136,7 @@ class StateAgent:
                 prompt = (
                     f"You are a supervisor managing three worker agents:\n"
                     f"1. 'kg_agent' (performs internal graph database and document queries)\n"
-                    # f"2. 'web_agent' (searches the web for recent context or external facts)\n"
+                    f"2. 'web_agent' (searches the web for recent context or external facts)\n"
                     # f"3. 'data_analyst' (runs Python scripts to execute calculations or format tables)\n\n"
                     f"Query to plan: '{state['query']}'\n\n"
                     f"Determine a list of agent names that need to run in sequence to answer this query.\n"
@@ -169,7 +170,6 @@ class StateAgent:
         
         texts = self.search_engine.search(state["query"])
         relations = self.rag_pipeline.query_graph_relationships(state["query"])
-<<<<<<< Updated upstream
         
         findings = (
             f"=== KG & Text Database Retrieval Findings ===\n"
@@ -180,15 +180,41 @@ class StateAgent:
         outputs = state.get("agent_outputs", []) or []
         return {"agent_outputs": outputs + [findings]}
 
-    # def retrieval_node(self, state: PipelineState):
-    #     """Queries the underlying hybrid and graph data planes."""
-    #     print("[Node: GraphRAG Retrieval] Gathering facts...")
-    #     texts = self.search_engine.search(state["query"])
-    #     relations = self.rag_pipeline.query_graph_relationships(state["query"], model_name = state["model"])
-    #     return {"retrieved_text": texts, "retrieved_graph": relations}
-=======
-        return {"retrieved_text": texts, "retrieved_graph": relations}
->>>>>>> Stashed changes
+    def _query_tavily(self, query: str, api_key: str) -> str:
+
+        url = "https://api.tavily.com/search"
+        payload = {
+            "api_key": api_key,
+            "query": query,
+            "include_answer": True,
+            "max_results": 3
+        }
+        try:
+            data = json.dumps(payload).encode("utf-8")
+            req = urllib.request.Request(
+                url, data=data, headers={"Content-Type": "application/json"}, method="POST"
+            )
+            with urllib.request.urlopen(req, timeout=5) as response:
+                res_data = json.loads(response.read().decode("utf-8"))
+                results = res_data.get("results", [])
+                formatted = [f"- {r.get('title')}: {r.get('content')} ({r.get('url')})" for r in results]
+                return f"=== Tavily Web Search Findings ===\n" + "\n".join(formatted) + "\n"
+        except Exception as e:
+            print(f"[Web Agent] Error contacting Tavily API: {e}")
+            return f"=== Tavily Web Search Findings (FAILED) ===\nError occurred during lookup: {str(e)}\n"
+
+    def web_agent_node(self, state: PipelineState):
+        """Worker Agent: Searches Tavily for current external context."""
+        api_key = os.getenv("TAVILY_API_KEY")
+        if not api_key:
+            print("[Web Agent] Warning: TAVILY_API_KEY not found in environment. Falling back to kg_search.")
+            # Reset intent to kg_search and plan to None so the supervisor replans
+            return {"intent": "kg_search", "plan": None}
+
+        print("[Worker: Web Agent] Querying external web search...")
+        findings = self._query_tavily(state["query"])
+        outputs = state.get("agent_outputs", []) or []
+        return {"agent_outputs": outputs + [findings]}
 
     def response_node(self, state: PipelineState):
         """Compiles facts into a verified response."""
@@ -242,6 +268,7 @@ class StateAgent:
         workflow.add_node("guardrail", self.input_guardrail_node)
         workflow.add_node("supervisor", self.supervisor_node)
         workflow.add_node("kg_agent", self.kg_agent_node)
+        workflow.add_node("web_agent", self.web_agent_node)
         workflow.add_node("response", self.response_node)
         workflow.add_node("output_guardrail", self.output_guardrail_node)
         
@@ -252,14 +279,15 @@ class StateAgent:
                 return END
             return "supervisor"
 
-        def route_from_supervisor(state: PipelineState) -> Literal["kg_agent", "web_agent", "data_analyst", "response"]:
+        def route_from_supervisor(state: PipelineState) -> Literal["kg_agent", "web_agent", "response"]:
             return state["next_node"]
 
         # Map Edges
         workflow.set_entry_point("guardrail")
         workflow.add_conditional_edges("guardrail", route_by_safety, {"supervisor": "supervisor", END: END})
-        workflow.add_conditional_edges("supervisor", route_from_supervisor, {"kg_agent": "kg_agent", "response": "response"})
+        workflow.add_conditional_edges("supervisor", route_from_supervisor, {"kg_agent": "kg_agent","web_agent": "web_agent", "response": "response"})
         workflow.add_edge("kg_agent", "supervisor")
+        workflow.add_edge("web_agent", "supervisor")
         workflow.add_edge("response", "output_guardrail")
         workflow.add_edge("output_guardrail", END)
         
@@ -283,7 +311,8 @@ if __name__ == "__main__":
     
     print("\n--- RUNNING SAFE TRANSACTION ---")
     QUERY = MEGA_CORPUS[0]["QUERY"][0]
-    safe_run_state = agent.run(query=QUERY)
+    web_query= "What was Nvidia's total revenue for the last fiscal quarter of 2025?"
+    safe_run_state = agent.run(query=web_query)
     print(f"Output: {safe_run_state['final_output']}")
     
     # print("\n--- RUNNING MALICIOUS TRANSACTION ---")
