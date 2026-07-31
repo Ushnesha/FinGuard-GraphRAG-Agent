@@ -219,8 +219,64 @@ class GraphRAGPipeline:
                     )
             return GraphExtraction(entities=entities, relationships=relationships)
         except Exception as e:
+            print(f"JSON parsing failed for chunk, attempting regex salvage...")
+            try:
+                # Retrieve content from response if it was fetched before error was raised
+                # or try to extract from exception message if it contains the text
+                content_str = ""
+                if 'response' in locals() and hasattr(response, 'content'):
+                    content_str = response.content.strip()
+                else:
+                    # If LangChain raised OutputParserException, see if we can get the raw string
+                    # from the exception details
+                    err_msg = str(e)
+                    # Check if exception has 'output' or similar raw text field
+                    if hasattr(e, 'output'):
+                        content_str = str(e.output)
+                    elif "CompletionUsage" in err_msg:
+                        # Extract whatever is in locals or try to find raw output in exception
+                        pass
+                
+                if content_str:
+                    salvaged = self._parse_truncated_json(content_str)
+                    if salvaged.entities or salvaged.relationships:
+                        print(f"Successfully salvaged {len(salvaged.entities)} entities and {len(salvaged.relationships)} relationships!")
+                        return salvaged
+            except Exception as salvage_err:
+                print(f"Salvage failed: {salvage_err}")
+            
             print(f"Error extracting chunk: {e}")
             return GraphExtraction(entities=[], relationships=[])
+
+    def _parse_truncated_json(self, raw_content: str) -> GraphExtraction:
+        """Uses regex to salvage complete entities/relationships from truncated JSON."""
+        import re
+        entities = []
+        relationships = []
+        
+        # Find all {...} substrings containing no nested braces
+        dict_pattern = r'\{[^{}]*\}'
+        for block_str in re.findall(dict_pattern, raw_content):
+            try:
+                item = json.loads(block_str)
+                if not isinstance(item, dict):
+                    continue
+                # Match entities
+                if "name" in item and "type" in item:
+                    entities.append(Entity(name=str(item["name"]).strip(), type=str(item["type"]).strip()))
+                # Match relationships
+                elif "source" in item and "type" in item and "target" in item:
+                    relationships.append(
+                        Relationship(
+                            source=str(item["source"]).strip(),
+                            type=str(item["type"]).strip(),
+                            target=str(item["target"]).strip()
+                        )
+                    )
+            except Exception:
+                pass
+                
+        return GraphExtraction(entities=entities, relationships=relationships)
 
     def _batch_write_to_neo4j(self, all_entities: list, all_relationships: list):
         """Write all collected graph elements in batched Cypher operations."""
