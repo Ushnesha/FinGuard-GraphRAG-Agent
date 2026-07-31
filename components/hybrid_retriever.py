@@ -7,7 +7,15 @@ from qdrant_client import QdrantClient
 from qdrant_client.models import Distance, VectorParams, PointStruct
 from rank_bm25 import BM25Okapi
 from langchain_huggingface import HuggingFaceEmbeddings
-from config import MEGA_CORPUS
+from app.config import (
+    MEGA_CORPUS,
+    EMBEDDING_MODEL,
+    VECTOR_DIMENSION,
+    CHUNK_SIZE,
+    CHUNK_OVERLAP,
+    QDRANT_PATH,
+    QDRANT_COLLECTION
+)
 
 # 1. Define the Raw Corpus
 # CORPUS = [
@@ -41,15 +49,15 @@ class HybridSearchEngine:
         print(f"Using device: {device}")
 
         self.embeddings = HuggingFaceEmbeddings(
-            model_name="sentence-transformers/all-MiniLM-L6-v2",
+            model_name=EMBEDDING_MODEL,
             model_kwargs={
                 'device': device,
             }
         )
         
         # Initialize Qdrant
-        self.qdrant = QdrantClient(path="./qdrant_db")
-        self.collection_name = "local_chunks_minilm"
+        self.qdrant = QdrantClient(path=QDRANT_PATH)
+        self.collection_name = QDRANT_COLLECTION
 
         self.recreate_needed = True
         if self.qdrant.collection_exists(self.collection_name):
@@ -72,12 +80,12 @@ class HybridSearchEngine:
             
             self.qdrant.create_collection(
                 collection_name=self.collection_name,
-                vectors_config=VectorParams(size=384, distance=Distance.COSINE) # miniLM vectors are 384 dim
+                vectors_config=VectorParams(size=VECTOR_DIMENSION, distance=Distance.COSINE)
             )
             self._initialize_qdrant(self.corpus_hash)
 
         # Initialize BM25 Index
-        bm25_path = "./qdrant_db/bm25_index.pkl"
+        bm25_path = os.path.join(QDRANT_PATH, "bm25_index.pkl")
         if self.recreate_needed or not os.path.exists(bm25_path):
             print("Building and saving BM25 index...")
             # Ensure parent directory exists
@@ -96,7 +104,7 @@ class HybridSearchEngine:
         """Standardized tokenizer for BM25 (strips punctuation and downcases)."""
         return re.findall(r"\w+", text.lower())
 
-    def _chunk_document(self, doc: str, max_chars: int = 600, overlap: int = 120) -> list:
+    def _chunk_document(self, doc: str, max_chars: int = CHUNK_SIZE, overlap: int = CHUNK_OVERLAP) -> list:
         """
         Chunks documents while keeping tables (lines containing '|') completely intact.
         """
