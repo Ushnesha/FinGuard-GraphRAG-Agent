@@ -169,6 +169,7 @@ class StateAgent:
         
         texts = self.search_engine.search(state["query"])
         relations = self.rag_pipeline.query_graph_relationships(state["query"])
+<<<<<<< Updated upstream
         
         findings = (
             f"=== KG & Text Database Retrieval Findings ===\n"
@@ -185,6 +186,9 @@ class StateAgent:
     #     texts = self.search_engine.search(state["query"])
     #     relations = self.rag_pipeline.query_graph_relationships(state["query"], model_name = state["model"])
     #     return {"retrieved_text": texts, "retrieved_graph": relations}
+=======
+        return {"retrieved_text": texts, "retrieved_graph": relations}
+>>>>>>> Stashed changes
 
     def response_node(self, state: PipelineState):
         """Compiles facts into a verified response."""
