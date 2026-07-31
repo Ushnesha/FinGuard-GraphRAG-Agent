@@ -58,11 +58,11 @@ docker compose up -d --build
 
 | Commit | Author | Date | Message |
 | --- | --- | --- | --- |
-| `bd2b9fe` | Ushnesha Daripa | 2026-07-30 | chunk truncation bypass code added |
-| `5914df7` | Ushnesha Daripa | 2026-07-30 | Merge pull request #10 from Ushnesha/ush_remote |
-| `f8ac0bd` | Ushnesha | 2026-07-30 | code optimization |
-| `746d0a3` | Ushnesha Daripa | 2026-07-30 | Merge pull request #9 from Ushnesha/ush_local |
-| `c22914c` | Ushnesha Daripa | 2026-07-30 | docs: auto-update README [skip ci] |
+| `8ce383d` | Ushnesha Daripa | 2026-07-31 | code updated for graphrag pipeline in agentic |
+| `23ab3cf` | Ushnesha Daripa | 2026-07-30 | Merge pull request #12 from Ushnesha/ush_remote |
+| `71a1f07` | Ushnesha | 2026-07-30 | kg_search node added with supervisor node in agentic graph |
+| `a62947b` | Ushnesha Daripa | 2026-07-30 | Merge pull request #11 from Ushnesha/ush_local |
+| `954bc52` | Ushnesha Daripa | 2026-07-30 | docs: auto-update README [skip ci] |
 
 
 ---
