@@ -1,4 +1,5 @@
 # phase3_agentic.py
+from app.config import retrieval_llm
 import os
 import json
 import sys
@@ -17,7 +18,6 @@ from app.config import (
     NEO4J_PASSWORD,
     TAVILY_API_KEY,
     TAVILY_API_URL,
-    llm,
     LLM_MAX_TOKENS_GUARDRAIL,
     LLM_MAX_TOKENS_SUPERVISOR,
     LLM_MAX_TOKENS_DECOMPOSER,
@@ -43,14 +43,14 @@ class PipelineState(TypedDict):
     attempted_nodes : List[str] # to track already executed agents
 
 class StateAgent:
-    def __init__(self):
+    def __init__(self, llm):
         self.search_engine = HybridSearchEngine(CORPUS)
 
         from neo4j import GraphDatabase
         self.neo4j_driver = GraphDatabase.driver(NEO4J_URI, auth=(NEO4J_USER, NEO4J_PASSWORD))
-
-        self.rag_pipeline = GraphRAGPipeline(self.neo4j_driver, CORPUS)
         self.llm = llm
+        
+        self.rag_pipeline = GraphRAGPipeline(self.neo4j_driver,llm_instance=self.llm, documents=CORPUS)
         self.json_llm = self.llm.bind(response_format={"type": "json_object"}, max_tokens=LLM_MAX_TOKENS_SUPERVISOR)
         self.graph_workflow = self._build_state_graph()
 

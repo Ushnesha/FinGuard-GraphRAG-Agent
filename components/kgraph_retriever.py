@@ -12,7 +12,6 @@ from app.config import (
     NEO4J_URI,
     NEO4J_USER,
     NEO4J_PASSWORD,
-    llm,
     LLM_MAX_TOKENS_DEFAULT,
     LLM_MAX_TOKENS_SUPERVISOR
 )
@@ -43,7 +42,7 @@ class QueryExtractionResult(BaseModel):
 
 
 class GraphRAGPipeline:
-    def __init__(self, neo4j_driver, documents: list = CORPUS):
+    def __init__(self, neo4j_driver, llm_instance, documents: list = CORPUS):
         self.raw_documents = documents
         corpus_str = "".join(sorted(self.raw_documents))
         self.corpus_hash = hashlib.md5(corpus_str.encode("utf-8")).hexdigest()
@@ -52,13 +51,7 @@ class GraphRAGPipeline:
         for doc in self.raw_documents:
             self.documents.extend(self._chunk_document(doc))
         
-        self.ollama_base_url = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
-        # self.llm = ChatOllama(
-        #     model="llama3.2:3b",
-        #     temperature=0,
-        #     base_url=self.ollama_base_url
-        # )
-        self.llm = llm
+        self.llm = llm_instance
         self.json_llm = self.llm.bind(response_format={"type": "json_object"}, max_tokens=LLM_MAX_TOKENS_DEFAULT)
         
         self.neo4j_driver = neo4j_driver
