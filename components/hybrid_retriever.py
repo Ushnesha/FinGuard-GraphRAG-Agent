@@ -210,7 +210,7 @@ class HybridSearchEngine:
 
     def search(self, query: str, k: int = 60, limit: int = 2) -> list:
         # A. Vector Search
-        query_vector = self.embeddings.embed_query(query)
+        query_vector = self.embeddings.encode(query, convert_to_numpy=True).tolist()
         v_results = self.qdrant.query_points(
             collection_name=self.collection_name,
             query=query_vector,
