@@ -58,11 +58,11 @@ docker compose up -d --build
 
 | Commit | Author | Date | Message |
 | --- | --- | --- | --- |
+| `5f88fb9` | Ushnesha Daripa | 2026-08-01 | judge llm added to evaluate |
+| `59ecc61` | Ushnesha Daripa | 2026-08-01 | Merge pull request #24 from Ushnesha/ush_local |
+| `2cf9360` | Ushnesha Daripa | 2026-08-01 | docs: auto-update README [skip ci] |
 | `71c66ac` | Ushnesha Daripa | 2026-08-01 | implemented evaluation measuring metrics |
-| `b1642da` | Ushnesha Daripa | 2026-07-31 | docs: auto-update README [skip ci] |
-| `e3d04e8` | Ushnesha Daripa | 2026-07-31 | web search optimized for query decomposer |
-| `b66b055` | Ushnesha Daripa | 2026-07-31 | docs: auto-update README [skip ci] |
-| `331ddf3` | Ushnesha Daripa | 2026-07-31 | code bug fix |
+| `0190421` | Ushnesha Daripa | 2026-07-31 | Merge pull request #23 from Ushnesha/ush_local |
 
 
 ---
