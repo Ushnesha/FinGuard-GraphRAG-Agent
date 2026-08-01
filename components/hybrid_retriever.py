@@ -6,7 +6,7 @@ import pickle
 from qdrant_client import QdrantClient
 from qdrant_client.models import Distance, VectorParams, PointStruct
 from rank_bm25 import BM25Okapi
-from langchain_huggingface import HuggingFaceEmbeddings
+from sentence_transformers import SentenceTransformer
 from app.config import (
     MEGA_CORPUS,
     EMBEDDING_MODEL,
@@ -14,8 +14,11 @@ from app.config import (
     CHUNK_SIZE,
     CHUNK_OVERLAP,
     QDRANT_PATH,
-    QDRANT_COLLECTION
+    QDRANT_COLLECTION,
+    RERANK_TOP_N,
+    RETRIEVAL_LIMIT
 )
+from components.reranker import CrossEncoderReranker
 
 # 1. Define the Raw Corpus
 # CORPUS = [
@@ -48,11 +51,9 @@ class HybridSearchEngine:
             device = "cpu"
         print(f"Using device: {device}")
 
-        self.embeddings = HuggingFaceEmbeddings(
+        self.embeddings = SentenceTransformer(
             model_name=EMBEDDING_MODEL,
-            model_kwargs={
-                'device': device,
-            }
+            device=device
         )
         
         # Initialize Qdrant
@@ -99,6 +100,9 @@ class HybridSearchEngine:
             print("Loading BM25 index from cache...")
             with open(bm25_path, "rb") as f:
                 self.bm25 = pickle.load(f)
+
+        # Initialize Cross-Encoder Reranker
+        self.reranker = CrossEncoderReranker()
 
     def _tokenize(self, text: str) -> list:
         """Standardized tokenizer for BM25 (strips punctuation and downcases)."""
@@ -178,7 +182,7 @@ class HybridSearchEngine:
     def _initialize_qdrant(self, corpus_hash: str):
         print("Initializing Qdrant collection...")
         # convert all documents into vectors
-        vectors = self.embeddings.embed_documents(self.documents)
+        vectors = self.embeddings.encode(self.documents, convert_to_numpy=True)
 
         # create points with vectors and documents
         points = [
@@ -213,7 +217,7 @@ class HybridSearchEngine:
         v_results = self.qdrant.query_points(
             collection_name=self.collection_name,
             query=query_vector,
-            limit=10
+            limit=RETRIEVAL_LIMIT
         ).points
         vector_ranks = {
             hit.payload["text"]: index
@@ -238,9 +242,13 @@ class HybridSearchEngine:
                 score += 1.0 / (k + bm25_ranks[doc] + 1)
             rrf_scores[doc] = score
 
-        # Sort based on consolidated scores
+        # Sort based on consolidated scores to get candidates
         sorted_docs = sorted(rrf_scores.items(), key=lambda x: x[1], reverse=True)
-        return [doc[0] for doc in sorted_docs[:limit]]
+        candidates = [doc[0] for doc in sorted_docs[:RETRIEVAL_LIMIT]]
+        
+        # Second-stage Cross-Encoder Reranking
+        print(f"[Hybrid Retriever] Reranking {len(candidates)} candidates down to {limit}...")
+        return self.reranker.rerank(query, candidates, top_n=limit)
 
     def close(self):
         self.qdrant.close()
@@ -253,7 +261,7 @@ if __name__ == "__main__":
     initialization_end_time = time()
     print(f"Time taken for Hybrid Search Engine Initialization: {(initialization_end_time - initialization_start_time) * 1000} ms")
     query_srch_start_time = time()
-    refined_results = engine.search(QUERY)
+    refined_results = engine.search(QUERY, limit=RERANK_TOP_N)
     query_srch_end_time = time()
     print(f"Time taken for Query Search: {(query_srch_end_time - query_srch_start_time) * 1000} ms")
     engine.close()

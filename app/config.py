@@ -30,3 +30,8 @@ CHUNK_SIZE = 600
 CHUNK_OVERLAP = 120
 QDRANT_PATH = "./qdrant_db"
 QDRANT_COLLECTION = "local_chunks_minilm"
+
+# --- RERANKING CONFIGURATION ---
+RERANKER_MODEL = "cross-encoder/ms-marco-MiniLM-L-6-v2"
+RERANK_TOP_N = 2
+RETRIEVAL_LIMIT = 10
