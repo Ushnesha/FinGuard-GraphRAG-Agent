@@ -58,11 +58,11 @@ docker compose up -d --build
 
 | Commit | Author | Date | Message |
 | --- | --- | --- | --- |
+| `331ddf3` | Ushnesha Daripa | 2026-07-31 | code bug fix |
+| `1cdf549` | Ushnesha Daripa | 2026-07-31 | docs: auto-update README [skip ci] |
 | `cd019d7` | Ushnesha Daripa | 2026-07-31 | added query_decomposer |
 | `3ea3a8b` | Ushnesha Daripa | 2026-07-31 | docs: auto-update README [skip ci] |
 | `cd7f618` | Ushnesha Daripa | 2026-07-31 | code added for cross-encoder layer to narrow down top-k retrieved documents |
-| `2298a5a` | Ushnesha Daripa | 2026-07-31 | Merge branch 'main' into ush_local |
-| `eb2ba15` | Ushnesha Daripa | 2026-07-31 | docs: auto-update README [skip ci] |
 
 
 ---
