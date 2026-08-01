@@ -58,11 +58,11 @@ docker compose up -d --build
 
 | Commit | Author | Date | Message |
 | --- | --- | --- | --- |
+| `af7c1ed` | Ushnesha Daripa | 2026-08-01 | implemented telemetry observation to the codebase |
+| `618403a` | Ushnesha Daripa | 2026-08-01 | docs: auto-update README [skip ci] |
 | `97dbd33` | Ushnesha Daripa | 2026-08-01 | bug fix for query retrieving |
 | `1c12d20` | Ushnesha Daripa | 2026-08-01 | docs: auto-update README [skip ci] |
 | `20f0aa7` | Ushnesha Daripa | 2026-08-01 | correct port updation for judge llm |
-| `956868f` | Ushnesha Daripa | 2026-08-01 | docs: auto-update README [skip ci] |
-| `9511827` | Ushnesha Daripa | 2026-08-01 | load eval set |
 
 
 ---

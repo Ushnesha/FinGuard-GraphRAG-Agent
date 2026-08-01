@@ -8,6 +8,8 @@ from fastapi.responses import HTMLResponse
 from agents.agentic import StateAgent
 from services.semantic_cache import RedisCache
 from app.models import QueryRequest
+from services.telemetry import init_telemetry
+init_telemetry()
 
 app = FastAPI(title="Autonomous Enterprise Analyst API")
 

@@ -11,6 +11,8 @@ from components.hybrid_retriever import HybridSearchEngine
 from agents.query_decomposer import QueryDecomposer
 from langchain_openai import ChatOpenAI
 import app.config as cfg
+from services.telemetry import init_telemetry
+init_telemetry()
 
 CORPUS = cfg.MEGA_CORPUS[0]["CORPUS"]
 

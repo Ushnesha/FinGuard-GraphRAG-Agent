@@ -42,3 +42,7 @@ QDRANT_COLLECTION = "local_chunks_minilm"
 RERANKER_MODEL = "cross-encoder/ms-marco-MiniLM-L-6-v2"
 RERANK_TOP_N = 2
 RETRIEVAL_LIMIT = 10
+
+# --- TELEMETRY CONFIGURATION ---
+ENABLE_TELEMETRY = os.getenv("ENABLE_TELEMETRY", "false").lower()
+TELEMETRY_ENDPOINT = os.getenv("TELEMETRY_ENDPOINT", "http://localhost:6006/v1/traces")
