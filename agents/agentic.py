@@ -7,7 +7,6 @@ import urllib.request
 from io import StringIO
 from typing import TypedDict, List, Literal
 from langgraph.graph import StateGraph, END
-from langchain_openai import ChatOpenAI
 from components.kgraph_retriever import GraphRAGPipeline
 from components.hybrid_retriever import HybridSearchEngine
 from agents.query_decomposer import QueryDecomposer
@@ -16,12 +15,14 @@ from app.config import (
     NEO4J_URI,
     NEO4J_USER,
     NEO4J_PASSWORD,
-    OPENAI_API_BASE,
-    LLM_MODEL,
-    LLM_TEMPERATURE,
-    LLM_MAX_TOKENS,
     TAVILY_API_KEY,
-    TAVILY_API_URL
+    TAVILY_API_URL,
+    llm,
+    LLM_MAX_TOKENS_GUARDRAIL,
+    LLM_MAX_TOKENS_SUPERVISOR,
+    LLM_MAX_TOKENS_DECOMPOSER,
+    LLM_MAX_TOKENS_ANALYST,
+    LLM_MAX_TOKENS_RESPONSE
 )
 
 CORPUS = MEGA_CORPUS[0]["CORPUS"]
@@ -49,14 +50,8 @@ class StateAgent:
         self.neo4j_driver = GraphDatabase.driver(NEO4J_URI, auth=(NEO4J_USER, NEO4J_PASSWORD))
 
         self.rag_pipeline = GraphRAGPipeline(self.neo4j_driver, CORPUS)
-        self.llm = ChatOpenAI(
-                    model=LLM_MODEL, 
-                    openai_api_key="none",                          # vLLM doesn't require a real API key
-                    openai_api_base=OPENAI_API_BASE,
-                    temperature=LLM_TEMPERATURE,
-                    max_tokens=LLM_MAX_TOKENS
-                )
-        self.json_llm = self.llm.bind(response_format={"type": "json_object"})
+        self.llm = llm
+        self.json_llm = self.llm.bind(response_format={"type": "json_object"}, max_tokens=LLM_MAX_TOKENS_SUPERVISOR)
         self.graph_workflow = self._build_state_graph()
 
 
@@ -329,7 +324,7 @@ class StateAgent:
             f"3. Return ONLY executable python code. Do not wrap in markdown code blocks or add explanation text.\n"
         )
         
-        response = self.llm.invoke(prompt)
+        response = self.llm.invoke(prompt, max_tokens=LLM_MAX_TOKENS_ANALYST)
         script = response.content.strip()
         
         exec_res = self._run_restricted_python(script)
@@ -368,7 +363,7 @@ class StateAgent:
             f"respond with exactly the token: [INSUFFICIENT_CONTEXT]\n\n"
             f"Final Answer:"
         )
-        response = self.llm.invoke(prompt)
+        response = self.llm.invoke(prompt, max_tokens=LLM_MAX_TOKENS_RESPONSE)
         content = response.content.strip()
 
         # ONLY request fallback if web_agent hasn't been tried yet
@@ -391,7 +386,7 @@ class StateAgent:
             f"Aggregated Context:\n{context}\n\n"
             f"Final Answer:"
         )
-            response = self.llm.invoke(prompt)
+            response = self.llm.invoke(prompt, max_tokens=LLM_MAX_TOKENS_RESPONSE)
             content = response.content.strip()
 
         
@@ -417,7 +412,7 @@ class StateAgent:
             f"Response to review:\n'{state['final_output']}'"
         )
         
-        response = self.llm.invoke(prompt)
+        response = self.llm.invoke(prompt, max_tokens=LLM_MAX_TOKENS_RESPONSE)
         
         prompt_tokens, completion_tokens = self._extract_tokens(response)
         tokens = state.get("tokens", {"prompt_tokens": 0, "completion_tokens": 0}).copy()

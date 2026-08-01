@@ -6,9 +6,16 @@ from typing import List
 from pydantic import BaseModel, Field
 from neo4j import GraphDatabase
 from langchain_ollama import ChatOllama
-from langchain_openai import ChatOpenAI
 from components.hybrid_retriever import HybridSearchEngine
-from app.config import MEGA_CORPUS
+from app.config import (
+    MEGA_CORPUS,
+    NEO4J_URI,
+    NEO4J_USER,
+    NEO4J_PASSWORD,
+    llm,
+    LLM_MAX_TOKENS_DEFAULT,
+    LLM_MAX_TOKENS_SUPERVISOR
+)
 
 CORPUS = MEGA_CORPUS[0]["CORPUS"]
 QUERY = MEGA_CORPUS[0]["QUERY"][0]
@@ -51,14 +58,8 @@ class GraphRAGPipeline:
         #     temperature=0,
         #     base_url=self.ollama_base_url
         # )
-        self.llm = ChatOpenAI(
-            model="meta-llama/Meta-Llama-3-8B-Instruct", 
-            openai_api_key="none",                          # vLLM doesn't require a real API key
-            openai_api_base=os.getenv("OPENAI_API_BASE", "http://localhost:11434/v1"),
-            temperature=0,
-            max_tokens=2000
-        )
-        self.json_llm = self.llm.bind(response_format={"type": "json_object"})
+        self.llm = llm
+        self.json_llm = self.llm.bind(response_format={"type": "json_object"}, max_tokens=LLM_MAX_TOKENS_DEFAULT)
         
         self.neo4j_driver = neo4j_driver
         if self._is_graph_initialize_needed():
@@ -403,7 +404,7 @@ class GraphRAGPipeline:
         """
         # 1. LLM Extraction
         try:
-            response = self.json_llm.invoke(prompt, stop=["<|eot_id|>", "<|end_of_text|>"])
+            response = self.json_llm.bind(max_tokens=LLM_MAX_TOKENS_SUPERVISOR).invoke(prompt, stop=["<|eot_id|>", "<|end_of_text|>"])
             content = response.content.strip()
             
             # Clean up markdown code wraps if present
@@ -539,11 +540,8 @@ def delete_graph(neo4j_driver):
 if __name__ == "__main__":
         from time import time
         # search_engine = HybridSearchEngine(CORPUS)
-        neo4j_uri = os.getenv("NEO4J_URI", "bolt://localhost:7687")
-        neo4j_user = os.getenv("NEO4J_USER", "neo4j")
-        neo4j_password = os.getenv("NEO4J_PASSWORD", "password123")
         neo4j_driver = GraphDatabase.driver(
-            neo4j_uri, auth=(neo4j_user, neo4j_password)
+            NEO4J_URI, auth=(NEO4J_USER, NEO4J_PASSWORD)
         )
         try:
             neo4j_driver.verify_connectivity()

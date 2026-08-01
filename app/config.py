@@ -1,5 +1,6 @@
 from scripts.load_data import load_finqa_corpus
 import os
+from langchain_openai import ChatOpenAI
 
 # --- DATA CORPUS CONFIGURATION ---
 FinQA_data_path = "data/FinQA/train.json"
@@ -18,10 +19,24 @@ OPENAI_API_BASE = os.getenv("OPENAI_API_BASE", "http://localhost:11434/v1")
 TAVILY_API_KEY = os.getenv("TAVILY_API_KEY", "")
 TAVILY_API_URL = "https://api.tavily.com/search"
 
-# --- SYSTEM HYPERPARAMETERS ---
+# --- SYSTEM HYPERPARAMETERS & TOKENS ---
 LLM_MODEL = "meta-llama/Meta-Llama-3-8B-Instruct"
 LLM_TEMPERATURE = 0.0
-LLM_MAX_TOKENS = 2000
+LLM_MAX_TOKENS_DEFAULT = 2000
+LLM_MAX_TOKENS_GUARDRAIL = 50
+LLM_MAX_TOKENS_SUPERVISOR = 150
+LLM_MAX_TOKENS_DECOMPOSER = 250
+LLM_MAX_TOKENS_ANALYST = 400
+LLM_MAX_TOKENS_RESPONSE = 800
+
+# Shared single LLM instance
+llm = ChatOpenAI(
+    model=LLM_MODEL, 
+    openai_api_key="none",                          # vLLM doesn't require a real API key
+    openai_api_base=OPENAI_API_BASE,
+    temperature=LLM_TEMPERATURE,
+    max_tokens=LLM_MAX_TOKENS_DEFAULT
+)
 
 # --- RETRIEVAL & VECTOR STORE CONFIGURATION ---
 EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
