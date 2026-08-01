@@ -5,6 +5,8 @@ import re
 import argparse
 from typing import List, Dict
 from langchain_openai import ChatOpenAI
+from services.telemetry import init_telemetry
+init_telemetry()
 
 # Add the project root to python path to resolve service and component imports
 # sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))

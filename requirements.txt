@@ -16,3 +16,7 @@ llama-index-llms-ollama
 llama-index-postprocessor-cohere-rerank
 sentence-transformers
 langchain-huggingface
+arize-phoenix 
+openinference-instrumentation-langchain 
+opentelemetry-sdk 
+opentelemetry-exporter-otlp
