@@ -58,11 +58,11 @@ docker compose up -d --build
 
 | Commit | Author | Date | Message |
 | --- | --- | --- | --- |
+| `cd7f618` | Ushnesha Daripa | 2026-07-31 | code added for cross-encoder layer to narrow down top-k retrieved documents |
+| `2298a5a` | Ushnesha Daripa | 2026-07-31 | Merge branch 'main' into ush_local |
+| `eb2ba15` | Ushnesha Daripa | 2026-07-31 | docs: auto-update README [skip ci] |
 | `04d7c12` | Ushnesha Daripa | 2026-07-31 | restructure the codebase |
-| `2a59bc3` | Ushnesha Daripa | 2026-07-31 | docs: auto-update README [skip ci] |
-| `3310bdf` | Ushnesha Daripa | 2026-07-31 | strict 1x1 mapping avoided in intent classifying |
-| `dd96152` | Ushnesha Daripa | 2026-07-31 | docs: auto-update README [skip ci] |
-| `aa34a1d` | Ushnesha Daripa | 2026-07-31 | implemented data analyst node for any python scripting code run |
+| `bfa7b35` | Ushnesha Daripa | 2026-07-31 | Merge pull request #18 from Ushnesha/ush_remote |
 
 
 ---
