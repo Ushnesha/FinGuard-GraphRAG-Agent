@@ -231,8 +231,18 @@ class StateAgent:
             with urllib.request.urlopen(req, timeout=5) as response:
                 res_data = json.loads(response.read().decode("utf-8"))
                 results = res_data.get("results", [])
-                formatted = [f"- {r.get('title')}: {r.get('content')} ({r.get('url')})" for r in results]
-                return f"=== Tavily Web Search Findings ===\n" + "\n".join(formatted) + "\n"
+                formatted = []
+                for r in results:
+                    content = r.get("content", "")
+                    if len(content) > 1000:
+                        content = content[:1000] + "... [TRUNCATED]"
+                    formatted.append(f"- {r.get('title')}: {content} ({r.get('url')})")
+                
+                answer = res_data.get("answer")
+                findings = "=== Tavily Web Search Findings ===\n"
+                if answer:
+                    findings += f"Summary Answer: {answer}\n\n"
+                return findings + "\n".join(formatted) + "\n"
         except Exception as e:
             print(f"[Web Agent] Error contacting Tavily API: {e}")
             return f"=== Tavily Web Search Findings (FAILED) ===\nError occurred during lookup: {str(e)}\n"
@@ -313,6 +323,8 @@ class StateAgent:
         print("[Worker: Data Analyst] Generating and executing quantitative code...")
         
         outputs_str = "\n".join(state.get("agent_outputs", []))
+        if len(outputs_str) > 16000:
+            outputs_str = outputs_str[:16000] + "\n... [CONTEXT TRUNCATED FOR LENGTH] ..."
         prompt = (
             f"You are a Python Data Analyst agent.\n"
             f"Based on the query and any context gathered so far, write a Python script to compute math operations, process numbers, or format markdown tables.\n\n"
@@ -351,6 +363,8 @@ class StateAgent:
         """Compiles facts into a verified response."""
         print("[Node: Response] Formulating response...")
         context = "\n".join(state.get("agent_outputs", []))
+        if len(context) > 16000:
+            context = context[:16000] + "\n... [CONTEXT TRUNCATED FOR LENGTH] ..."
         attempted_nodes = state.get("attempted_nodes", []) or []
         prompt = (
             f"You are an analytical assistant.\n"
