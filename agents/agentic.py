@@ -1,5 +1,3 @@
-# phase3_agentic.py
-from app.config import retrieval_llm
 import os
 import json
 import sys
