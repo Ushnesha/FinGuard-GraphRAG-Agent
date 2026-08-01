@@ -87,7 +87,7 @@ def judge_recall(question: str, context: str, gold_reference: str, judge_llm) ->
     except Exception as e:
         return {"score": 0.0, "reason": f"Judge failed: {e}"}
 
-def run_evaluation(limit: int, agent_model: str, judge_model: str):
+def run_evaluation(limit: int, agent_model: str, judge_model: str, judge_api_base: str):
     print(f"Loading aligned FinQA evaluation subset (limit: {limit})...")
     with open(cfg.FinQA_data_path, "r") as f:
         raw_data = json.load(f)
@@ -100,7 +100,7 @@ def run_evaluation(limit: int, agent_model: str, judge_model: str):
     judge_llm = ChatOpenAI(
         model=judge_model, 
         openai_api_key="none",                          # vLLM doesn't require a real API key
-        openai_api_base=cfg.OPENAI_API_BASE,
+        openai_api_base=judge_api_base,
         temperature=cfg.LLM_TEMPERATURE,
         max_tokens=cfg.LLM_MAX_TOKENS_DEFAULT
     )
@@ -198,6 +198,7 @@ if __name__ == "__main__":
     parser.add_argument("--limit", type=int, default=5, help="Number of samples to evaluate (1-200)")
     parser.add_argument("--agent-model", type=str, default=cfg.RETRIEVAL_LLM_MODEL, help="Model name for the RAG agent.")
     parser.add_argument("--judge-model", type=str, default=cfg.JUDGE_LLM_MODEL, help="Model name for the evaluation judge (must be different).")
+    parser.add_argument("--judge-api-base", type=str, default=cfg.OPENAI_API_BASE_JUDGE, help="API base URL for the judge model.")
     args = parser.parse_args()
     
-    run_evaluation(args.limit, args.agent_model, args.judge_model)
+    run_evaluation(args.limit, args.agent_model, args.judge_model, args.judge_api_base)

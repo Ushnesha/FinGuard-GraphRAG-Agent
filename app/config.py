@@ -15,6 +15,7 @@ NEO4J_PASSWORD = os.getenv("NEO4J_PASSWORD", "password123")
 
 REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")
 OPENAI_API_BASE = os.getenv("OPENAI_API_BASE", "http://localhost:11434/v1")
+OPENAI_API_BASE_JUDGE = os.getenv("OPENAI_API_BASE_JUDGE", "http://localhost:11435/v1")
 TAVILY_API_KEY = os.getenv("TAVILY_API_KEY", "")
 TAVILY_API_URL = "https://api.tavily.com/search"
 
