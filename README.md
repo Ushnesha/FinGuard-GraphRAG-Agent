@@ -58,11 +58,11 @@ docker compose up -d --build
 
 | Commit | Author | Date | Message |
 | --- | --- | --- | --- |
+| `769ee34` | Ushnesha Daripa | 2026-08-01 | load eval set |
+| `aca79ea` | Ushnesha Daripa | 2026-08-01 | docs: auto-update README [skip ci] |
 | `1c04be8` | Ushnesha Daripa | 2026-08-01 | code updated for decoupling agent model and judge model |
 | `6448606` | Ushnesha Daripa | 2026-08-01 | docs: auto-update README [skip ci] |
 | `5f88fb9` | Ushnesha Daripa | 2026-08-01 | judge llm added to evaluate |
-| `59ecc61` | Ushnesha Daripa | 2026-08-01 | Merge pull request #24 from Ushnesha/ush_local |
-| `2cf9360` | Ushnesha Daripa | 2026-08-01 | docs: auto-update README [skip ci] |
 
 
 ---

@@ -87,9 +87,11 @@ def judge_recall(question: str, context: str, gold_reference: str, judge_llm) ->
     except Exception as e:
         return {"score": 0.0, "reason": f"Judge failed: {e}"}
 
-def run_evaluation(agent_model, judge_model, limit: int = 5):
+def run_evaluation(limit: int, agent_model: str, judge_model: str):
     print(f"Loading aligned FinQA evaluation subset (limit: {limit})...")
-    eval_set = cfg.MEGA_CORPUS[0]["CORPUS"][:limit]
+    with open(cfg.FinQA_data_path, "r") as f:
+        raw_data = json.load(f)
+    eval_set = raw_data[:limit]
     
     if not eval_set:
         print("[Error] No evaluation data loaded. Aborting.")
