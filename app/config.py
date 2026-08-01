@@ -20,7 +20,8 @@ TAVILY_API_KEY = os.getenv("TAVILY_API_KEY", "")
 TAVILY_API_URL = "https://api.tavily.com/search"
 
 # --- SYSTEM HYPERPARAMETERS & TOKENS ---
-LLM_MODEL = "meta-llama/Meta-Llama-3-8B-Instruct"
+RETRIEVAL_LLM_MODEL = "meta-llama/Meta-Llama-3-8B-Instruct"
+JUDGE_LLM_MODEL = "Qwen/Qwen2.5-7B-Instruct"
 LLM_TEMPERATURE = 0.0
 LLM_MAX_TOKENS_DEFAULT = 2000
 LLM_MAX_TOKENS_GUARDRAIL = 50
@@ -30,8 +31,16 @@ LLM_MAX_TOKENS_ANALYST = 400
 LLM_MAX_TOKENS_RESPONSE = 800
 
 # Shared single LLM instance
-llm = ChatOpenAI(
-    model=LLM_MODEL, 
+retrieval_llm = ChatOpenAI(
+    model=RETRIEVAL_LLM_MODEL, 
+    openai_api_key="none",                          # vLLM doesn't require a real API key
+    openai_api_base=OPENAI_API_BASE,
+    temperature=LLM_TEMPERATURE,
+    max_tokens=LLM_MAX_TOKENS_DEFAULT
+)
+
+judge_llm = ChatOpenAI(
+    model=JUDGE_LLM_MODEL, 
     openai_api_key="none",                          # vLLM doesn't require a real API key
     openai_api_base=OPENAI_API_BASE,
     temperature=LLM_TEMPERATURE,
