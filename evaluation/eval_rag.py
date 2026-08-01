@@ -4,12 +4,13 @@ import json
 import re
 import argparse
 from typing import List, Dict
+from langchain_openai import ChatOpenAI
 
 # Add the project root to python path to resolve service and component imports
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+# sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from agents.agentic import StateAgent
-from app.config import MEGA_CORPUS, llm
+import app.config as cfg
 
 def extract_score(response_text: str) -> float:
     """Helper to parse a float score from the judge's output."""
@@ -86,39 +87,26 @@ def judge_recall(question: str, context: str, gold_reference: str, judge_llm) ->
     except Exception as e:
         return {"score": 0.0, "reason": f"Judge failed: {e}"}
 
-def run_evaluation(limit: int = 5, agent_model: str = None, judge_model: str = None):
+def run_evaluation(agent_model, judge_model, limit: int = 5):
     print(f"Loading aligned FinQA evaluation subset (limit: {limit})...")
-    eval_set = MEGA_CORPUS[0]["CORPUS"][:limit]
+    eval_set = cfg.MEGA_CORPUS[0]["CORPUS"][:limit]
     
     if not eval_set:
         print("[Error] No evaluation data loaded. Aborting.")
         return
-        
-    print(f"Initializing RAG Agent with model: {agent_model or 'default'}...")
-    agent = StateAgent(model=agent_model)
 
-    # Initialize Judge model
-    from app.config import LLM_MODEL
-    actual_agent_model = agent_model or LLM_MODEL
-    actual_judge_model = judge_model or actual_agent_model
+    judge_llm = ChatOpenAI(
+        model=judge_model, 
+        openai_api_key="none",                          # vLLM doesn't require a real API key
+        openai_api_base=cfg.OPENAI_API_BASE,
+        temperature=cfg.LLM_TEMPERATURE,
+        max_tokens=cfg.LLM_MAX_TOKENS_DEFAULT
+    )
+
+
+    print(f"Initializing RAG Agent...")
+    agent = StateAgent(llm_model=agent_model)
     
-    if actual_judge_model == actual_agent_model:
-        print(f"[Warning] Evaluation is using the SAME model ({actual_judge_model}) for both agent and judge.")
-        active_judge_llm = llm
-    else:
-        print(f"Initializing distinct Judge LLM with model: {actual_judge_model}...")
-        from langchain_openai import ChatOpenAI
-        from app.config import OPENAI_API_BASE, LLM_TEMPERATURE
-        
-        # Point to port 11435 on the same API server base if we are querying the separate judge model
-        judge_api_base = OPENAI_API_BASE.replace("11434", "11435")
-        active_judge_llm = ChatOpenAI(
-            model=actual_judge_model,
-            openai_api_key="none",
-            openai_api_base=judge_api_base,
-            temperature=LLM_TEMPERATURE,
-            max_tokens=200
-        )
     
     results = []
     
@@ -144,9 +132,9 @@ def run_evaluation(limit: int = 5, agent_model: str = None, judge_model: str = N
         context = "\n".join(state.get("agent_outputs", []))
         
         # 3. Judge Metrics
-        faith = judge_faithfulness(question, context, answer, active_judge_llm)
-        relevance = judge_relevance(question, answer, active_judge_llm)
-        recall = judge_recall(question, context, gold_ref, active_judge_llm)
+        faith = judge_faithfulness(question, context, answer, judge_llm)
+        relevance = judge_relevance(question, answer, judge_llm)
+        recall = judge_recall(question, context, gold_ref, judge_llm)
         
         results.append({
             "idx": idx + 1,
@@ -171,8 +159,8 @@ def run_evaluation(limit: int = 5, agent_model: str = None, judge_model: str = N
     print("📈 AGGREGATE EVALUATION REPORT")
     print("="*50)
     print(f"Total Evaluated Samples: {len(results)}")
-    print(f"Agent Model:             {actual_agent_model}")
-    print(f"Judge Model:             {actual_judge_model}")
+    print(f"Agent Model:             {agent_model}")
+    print(f"Judge Model:             {judge_model}")
     print(f"Average Faithfulness (Hallucination-free): {avg_faith:.2%}")
     print(f"Average Answer Relevance:                 {avg_relevance:.2%}")
     print(f"Average Context Recall:                    {avg_recall:.2%}")
@@ -185,8 +173,8 @@ def run_evaluation(limit: int = 5, agent_model: str = None, judge_model: str = N
     with open(report_path, "w") as f:
         f.write("# RAG Evaluation Report (FinQA Subset)\n\n")
         f.write(f"- **Total Samples Evaluated**: {len(results)}\n")
-        f.write(f"- **Agent Model**: {actual_agent_model}\n")
-        f.write(f"- **Judge Model**: {actual_judge_model}\n")
+        f.write(f"- **Agent Model**: {agent_model}\n")
+        f.write(f"- **Judge Model**: {judge_model}\n")
         f.write(f"- **Average Faithfulness**: {avg_faith:.2%}\n")
         f.write(f"- **Average Answer Relevance**: {avg_relevance:.2%}\n")
         f.write(f"- **Average Context Recall**: {avg_recall:.2%}\n\n")
@@ -206,8 +194,8 @@ def run_evaluation(limit: int = 5, agent_model: str = None, judge_model: str = N
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Evaluate RAG Pipeline using LLM-as-a-judge.")
     parser.add_argument("--limit", type=int, default=5, help="Number of samples to evaluate (1-200)")
-    parser.add_argument("--agent-model", type=str, default=None, help="Model name for the RAG agent.")
-    parser.add_argument("--judge-model", type=str, default=None, help="Model name for the evaluation judge (must be different).")
+    parser.add_argument("--agent-model", type=str, default=cfg.RETRIEVAL_LLM_MODEL, help="Model name for the RAG agent.")
+    parser.add_argument("--judge-model", type=str, default=cfg.JUDGE_LLM_MODEL, help="Model name for the evaluation judge (must be different).")
     args = parser.parse_args()
     
     run_evaluation(args.limit, args.agent_model, args.judge_model)

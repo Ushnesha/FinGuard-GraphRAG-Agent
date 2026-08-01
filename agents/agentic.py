@@ -11,21 +11,10 @@ from langgraph.graph import StateGraph, END
 from components.kgraph_retriever import GraphRAGPipeline
 from components.hybrid_retriever import HybridSearchEngine
 from agents.query_decomposer import QueryDecomposer
-from app.config import (
-    MEGA_CORPUS,
-    NEO4J_URI,
-    NEO4J_USER,
-    NEO4J_PASSWORD,
-    TAVILY_API_KEY,
-    TAVILY_API_URL,
-    LLM_MAX_TOKENS_GUARDRAIL,
-    LLM_MAX_TOKENS_SUPERVISOR,
-    LLM_MAX_TOKENS_DECOMPOSER,
-    LLM_MAX_TOKENS_ANALYST,
-    LLM_MAX_TOKENS_RESPONSE
-)
+from langchain_openai import ChatOpenAI
+import app.config as cfg
 
-CORPUS = MEGA_CORPUS[0]["CORPUS"]
+CORPUS = cfg.MEGA_CORPUS[0]["CORPUS"]
 
 # Define state structure
 class PipelineState(TypedDict):
@@ -43,15 +32,21 @@ class PipelineState(TypedDict):
     attempted_nodes : List[str] # to track already executed agents
 
 class StateAgent:
-    def __init__(self, llm):
+    def __init__(self, llm_model):
         self.search_engine = HybridSearchEngine(CORPUS)
 
         from neo4j import GraphDatabase
-        self.neo4j_driver = GraphDatabase.driver(NEO4J_URI, auth=(NEO4J_USER, NEO4J_PASSWORD))
-        self.llm = llm
+        self.neo4j_driver = GraphDatabase.driver(cfg.NEO4J_URI, auth=(cfg.NEO4J_USER, cfg.NEO4J_PASSWORD))
+        self.llm = ChatOpenAI(
+            model=llm_model, 
+            openai_api_key="none",                          # vLLM doesn't require a real API key
+            openai_api_base=cfg.OPENAI_API_BASE,
+            temperature=cfg.LLM_TEMPERATURE,
+            max_tokens=cfg.LLM_MAX_TOKENS_DEFAULT
+        )
         
         self.rag_pipeline = GraphRAGPipeline(self.neo4j_driver,llm_instance=self.llm, documents=CORPUS)
-        self.json_llm = self.llm.bind(response_format={"type": "json_object"}, max_tokens=LLM_MAX_TOKENS_SUPERVISOR)
+        self.json_llm = self.llm.bind(response_format={"type": "json_object"}, max_tokens=cfg.LLM_MAX_TOKENS_DEFAULT)
         self.graph_workflow = self._build_state_graph()
 
 
@@ -216,7 +211,7 @@ class StateAgent:
 
     def _query_tavily(self, query: str, api_key: str) -> str:
 
-        url = TAVILY_API_URL
+        url = cfg.TAVILY_API_URL
         payload = {
             "api_key": api_key,
             "query": query,
@@ -249,7 +244,7 @@ class StateAgent:
 
     def web_agent_node(self, state: PipelineState):
         """Worker Agent: Searches Tavily for current external context."""
-        api_key = os.getenv("TAVILY_API_KEY") or TAVILY_API_KEY
+        api_key = os.getenv("TAVILY_API_KEY") or cfg.TAVILY_API_KEY
         sub_queries = state.get("sub_queries") or [state["query"]]
         attempted_nodes = state.get("attempted_nodes", []) or []
         if not api_key:
@@ -336,7 +331,7 @@ class StateAgent:
             f"3. Return ONLY executable python code. Do not wrap in markdown code blocks or add explanation text.\n"
         )
         
-        response = self.llm.invoke(prompt, max_tokens=LLM_MAX_TOKENS_ANALYST)
+        response = self.llm.invoke(prompt, max_tokens=cfg.LLM_MAX_TOKENS_ANALYST)
         script = response.content.strip()
         
         exec_res = self._run_restricted_python(script)
@@ -377,7 +372,7 @@ class StateAgent:
             f"respond with exactly the token: [INSUFFICIENT_CONTEXT]\n\n"
             f"Final Answer:"
         )
-        response = self.llm.invoke(prompt, max_tokens=LLM_MAX_TOKENS_RESPONSE)
+        response = self.llm.invoke(prompt, max_tokens=cfg.LLM_MAX_TOKENS_RESPONSE)
         content = response.content.strip()
 
         # ONLY request fallback if web_agent hasn't been tried yet
@@ -400,7 +395,7 @@ class StateAgent:
             f"Aggregated Context:\n{context}\n\n"
             f"Final Answer:"
         )
-            response = self.llm.invoke(prompt, max_tokens=LLM_MAX_TOKENS_RESPONSE)
+            response = self.llm.invoke(prompt, max_tokens=cfg.LLM_MAX_TOKENS_RESPONSE)
             content = response.content.strip()
 
         
@@ -426,7 +421,7 @@ class StateAgent:
             f"Response to review:\n'{state['final_output']}'"
         )
         
-        response = self.llm.invoke(prompt, max_tokens=LLM_MAX_TOKENS_RESPONSE)
+        response = self.llm.invoke(prompt, max_tokens=cfg.LLM_MAX_TOKENS_RESPONSE)
         
         prompt_tokens, completion_tokens = self._extract_tokens(response)
         tokens = state.get("tokens", {"prompt_tokens": 0, "completion_tokens": 0}).copy()
@@ -496,7 +491,7 @@ if __name__ == "__main__":
     agent = StateAgent()
     
     print("\n--- RUNNING SAFE TRANSACTION ---")
-    kg_query = MEGA_CORPUS[0]["QUERY"][0]
+    kg_query = cfg.MEGA_CORPUS[0]["QUERY"][0]
     web_query= "What was Nvidia's total revenue for the last fiscal quarter of 2025?"
     math_query = "What was the percentage decline in net revenue for Entergy Louisiana from 2007 to 2008?"
     safe_run_state = agent.run(query=math_query)
