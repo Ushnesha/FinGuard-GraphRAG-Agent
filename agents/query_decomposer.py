@@ -14,7 +14,7 @@ class QueryDecomposer:
             f"Sub-queries:"
         )
         try:
-            response = self.llm.invoke(prompt)
+            response = self.llm.invoke(prompt, max_tokens=250)
             content = response.content.strip()
             
             # Fast Python parsing of bullet points

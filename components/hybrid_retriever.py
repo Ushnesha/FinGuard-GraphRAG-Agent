@@ -51,10 +51,7 @@ class HybridSearchEngine:
             device = "cpu"
         print(f"Using device: {device}")
 
-        self.embeddings = SentenceTransformer(
-            model_name=EMBEDDING_MODEL,
-            device=device
-        )
+        self.embeddings = SentenceTransformer(EMBEDDING_MODEL, device=device)
         
         # Initialize Qdrant
         self.qdrant = QdrantClient(path=QDRANT_PATH)
