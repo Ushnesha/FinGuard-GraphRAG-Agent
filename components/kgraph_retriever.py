@@ -1,3 +1,4 @@
+from app.config import LLM_MAX_TOKENS_GRAPH_INITIALIZER
 import os
 import json
 import asyncio
@@ -52,7 +53,7 @@ class GraphRAGPipeline:
             self.documents.extend(self._chunk_document(doc))
         
         self.llm = llm_instance
-        self.json_llm = self.llm.bind(response_format={"type": "json_object"}, max_tokens=LLM_MAX_TOKENS_DEFAULT)
+        self.json_llm = self.llm.bind(response_format={"type": "json_object"}, max_tokens=LLM_MAX_TOKENS_GRAPH_INITIALIZER)
         
         self.neo4j_driver = neo4j_driver
         if self._is_graph_initialize_needed():
@@ -397,7 +398,7 @@ class GraphRAGPipeline:
         """
         # 1. LLM Extraction
         try:
-            response = self.json_llm.bind(max_tokens=LLM_MAX_TOKENS_SUPERVISOR).invoke(prompt, stop=["<|eot_id|>", "<|end_of_text|>"])
+            response = self.json_llm.invoke(prompt, stop=["<|eot_id|>", "<|end_of_text|>"])
             content = response.content.strip()
             
             # Clean up markdown code wraps if present

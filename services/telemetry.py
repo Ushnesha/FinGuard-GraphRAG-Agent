@@ -13,8 +13,8 @@ def init_telemetry():
             from opentelemetry.sdk.trace.export import SimpleSpanProcessor
             from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
 
-            # Start the Phoenix local app server (defaulting to port 6006)
-            px.launch_app(port=6006)
+            # Start the Phoenix local app server (defaulting to port 6006, binding to 0.0.0.0 for remote access)
+            px.launch_app(host="0.0.0.0", port=6006)
 
             # Configure OpenTelemetry exporter pointing to the local Phoenix receiver
             tracer_provider = TracerProvider()
