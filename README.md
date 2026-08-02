@@ -58,11 +58,11 @@ docker compose up -d --build
 
 | Commit | Author | Date | Message |
 | --- | --- | --- | --- |
+| `58a9d85` | Ushnesha Daripa | 2026-08-01 | UI change of model |
+| `5a29c8d` | Ushnesha Daripa | 2026-08-01 | docs: auto-update README [skip ci] |
 | `d657e67` | Ushnesha Daripa | 2026-08-01 | code added for async evaluation and telemtry observability |
 | `8b2c16c` | Ushnesha Daripa | 2026-08-01 | docs: auto-update README [skip ci] |
 | `af7c1ed` | Ushnesha Daripa | 2026-08-01 | implemented telemetry observation to the codebase |
-| `618403a` | Ushnesha Daripa | 2026-08-01 | docs: auto-update README [skip ci] |
-| `97dbd33` | Ushnesha Daripa | 2026-08-01 | bug fix for query retrieving |
 
 
 ---

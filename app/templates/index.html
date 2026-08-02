@@ -661,7 +661,7 @@
         
         <label class="settings-label" for="modelSelect" style="margin-top: 12px;">Reasoning Model</label>
         <select id="modelSelect" class="input-field">
-          <option value="llama3">llama3</option>
+          <option value="meta-llama/Meta-Llama-3-8B-Instruct">meta-llama/Meta-Llama-3-8B-Instruct</option>
         </select>
         <div class="helper-text">Select the LLM model to be used by the GraphRAG pipeline and input guardrails.</div>
       </div>
@@ -753,13 +753,11 @@
             modelSelect.appendChild(opt);
           });
           
-          // Select default 'llama3' or first one
-          const defaultModel = data.models.find(m => m.startsWith('llama3')) || data.models[0];
-          modelSelect.value = defaultModel;
+          modelSelect.value = data.models[0];
         }
       } catch (e) {
         console.warn("Failed to load models dynamically, using fallback", e);
-        const fallbacks = ["llama3:latest", "llama3.2:3b", "gemma3:4b", "mistral:latest", "deepseek-r1:8b"];
+        const fallbacks = ["meta-llama/Meta-Llama-3-8B-Instruct"];
         modelSelect.innerHTML = '';
         fallbacks.forEach(model => {
           const opt = document.createElement('option');

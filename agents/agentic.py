@@ -10,6 +10,7 @@ from components.kgraph_retriever import GraphRAGPipeline
 from components.hybrid_retriever import HybridSearchEngine
 from agents.query_decomposer import QueryDecomposer
 from langchain_openai import ChatOpenAI
+from neo4j import GraphDatabase
 import app.config as cfg
 from services.telemetry import init_telemetry
 init_telemetry()
@@ -35,8 +36,11 @@ class StateAgent:
     def __init__(self, llm_model):
         self.search_engine = HybridSearchEngine(CORPUS)
 
-        from neo4j import GraphDatabase
-        self.neo4j_driver = GraphDatabase.driver(cfg.NEO4J_URI, auth=(cfg.NEO4J_USER, cfg.NEO4J_PASSWORD))
+        self.neo4j_driver = GraphDatabase.driver(
+            cfg.NEO4J_URI, 
+            auth=(cfg.NEO4J_USER, cfg.NEO4J_PASSWORD),
+            connection_timeout=5.0
+        )
         self.llm = ChatOpenAI(
             model=llm_model, 
             openai_api_key="none",                          # vLLM doesn't require a real API key
