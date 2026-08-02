@@ -3,6 +3,7 @@ import sys
 import json
 import re
 import argparse
+import asyncio
 from typing import List, Dict
 from langchain_openai import ChatOpenAI
 from services.telemetry import init_telemetry
@@ -46,7 +47,7 @@ def judge_faithfulness(question: str, context: str, answer: str, judge_llm) -> D
         "Reasoning: <brief reasoning>"
     )
     try:
-        response = judge_llm.invoke(prompt, max_tokens=150).content
+        response = judge_llm.invoke(prompt).content
         return {"score": extract_score(response), "reason": get_reasoning(response)}
     except Exception as e:
         return {"score": 0.0, "reason": f"Judge failed: {e}"}
@@ -65,7 +66,7 @@ def judge_relevance(question: str, answer: str, judge_llm) -> Dict:
         "Reasoning: <brief reasoning>"
     )
     try:
-        response = judge_llm.invoke(prompt, max_tokens=150).content
+        response = judge_llm.invoke(prompt).content
         return {"score": extract_score(response), "reason": get_reasoning(response)}
     except Exception as e:
         return {"score": 0.0, "reason": f"Judge failed: {e}"}
@@ -84,12 +85,57 @@ def judge_recall(question: str, context: str, gold_reference: str, judge_llm) ->
         "Reasoning: <brief reasoning>"
     )
     try:
-        response = judge_llm.invoke(prompt, max_tokens=150).content
+        response = judge_llm.invoke(prompt).content
         return {"score": extract_score(response), "reason": get_reasoning(response)}
     except Exception as e:
         return {"score": 0.0, "reason": f"Judge failed: {e}"}
 
-def run_evaluation(limit: int, agent_model: str, judge_model: str, judge_api_base: str):
+async def evaluate_sample(idx: int, item: dict, agent: StateAgent, judge_llm, limit: int, semaphore: asyncio.Semaphore):
+    async with semaphore:
+        question = item["qa"]["question"]
+        print(f"\n[{idx + 1}/{limit}] Starting Query: '{question}'")
+        
+        # 1. Compile Gold Facts Reference
+        gold_facts = []
+        gold_inds = item["qa"].get("gold_inds", {})
+        if gold_inds:
+            for k, v in gold_inds.items():
+                gold_facts.append(f"- {v}")
+        explanation = item["qa"].get("explanation")
+        if explanation:
+            gold_facts.append(f"- Explanation: {explanation}")
+        gold_facts.append(f"- Target Answer: {item['qa'].get('answer')}")
+        gold_ref = "\n".join(gold_facts)
+        
+        # 2. Run Pipeline in separate thread to bypass blocking
+        loop = asyncio.get_running_loop()
+        state = await loop.run_in_executor(None, lambda: agent.run(query=question))
+        answer = state.get("final_output", "")
+        context = "\n".join(state.get("agent_outputs", []))
+        
+        # 3. Judge Metrics (run all 3 in parallel)
+        faith_task = loop.run_in_executor(None, lambda: judge_faithfulness(question, context, answer, judge_llm))
+        relevance_task = loop.run_in_executor(None, lambda: judge_relevance(question, answer, judge_llm))
+        recall_task = loop.run_in_executor(None, lambda: judge_recall(question, context, gold_ref, judge_llm))
+        
+        faith, relevance, recall = await asyncio.gather(faith_task, relevance_task, recall_task)
+        
+        print(f"\n[{idx + 1}/{limit}] Completed Query: '{question}'")
+        print(f"  > Faithfulness: {faith['score']} ({faith['reason']})")
+        print(f"  > Relevance:    {relevance['score']} ({relevance['reason']})")
+        print(f"  > Recall:       {recall['score']} ({recall['reason']})")
+        
+        return {
+            "idx": idx + 1,
+            "question": question,
+            "gold_ref": gold_ref,
+            "answer": answer,
+            "faithfulness": faith,
+            "relevance": relevance,
+            "recall": recall
+        }
+
+def run_evaluation(limit: int, agent_model: str, judge_model: str, judge_api_base: str, concurrency: int = 10):
     print(f"Loading aligned FinQA evaluation subset (limit: {limit})...")
     with open(cfg.FinQA_data_path, "r") as f:
         raw_data = json.load(f)
@@ -104,55 +150,22 @@ def run_evaluation(limit: int, agent_model: str, judge_model: str, judge_api_bas
         openai_api_key="none",                          # vLLM doesn't require a real API key
         openai_api_base=judge_api_base,
         temperature=cfg.LLM_TEMPERATURE,
-        max_tokens=cfg.LLM_MAX_TOKENS_DEFAULT
+        max_tokens=cfg.LLM_MAX_TOKENS_JUDGE
     )
-
 
     print(f"Initializing RAG Agent...")
     agent = StateAgent(llm_model=agent_model)
     
-    
-    results = []
-    
-    for idx, item in enumerate(eval_set):
-        question = item["qa"]["question"]
-        print(f"\n[{idx + 1}/{limit}] Evaluating Query: '{question}'")
-        
-        # 1. Compile Gold Facts Reference
-        gold_facts = []
-        gold_inds = item["qa"].get("gold_inds", {})
-        if gold_inds:
-            for k, v in gold_inds.items():
-                gold_facts.append(f"- {v}")
-        explanation = item["qa"].get("explanation")
-        if explanation:
-            gold_facts.append(f"- Explanation: {explanation}")
-        gold_facts.append(f"- Target Answer: {item['qa'].get('answer')}")
-        gold_ref = "\n".join(gold_facts)
-        
-        # 2. Run Pipeline
-        state = agent.run(query=question)
-        answer = state.get("final_output", "")
-        context = "\n".join(state.get("agent_outputs", []))
-        
-        # 3. Judge Metrics
-        faith = judge_faithfulness(question, context, answer, judge_llm)
-        relevance = judge_relevance(question, answer, judge_llm)
-        recall = judge_recall(question, context, gold_ref, judge_llm)
-        
-        results.append({
-            "idx": idx + 1,
-            "question": question,
-            "gold_ref": gold_ref,
-            "answer": answer,
-            "faithfulness": faith,
-            "relevance": relevance,
-            "recall": recall
-        })
-        
-        print(f"  > Faithfulness: {faith['score']} ({faith['reason']})")
-        print(f"  > Relevance:    {relevance['score']} ({relevance['reason']})")
-        print(f"  > Recall:       {recall['score']} ({recall['reason']})")
+    async def run_evaluation_async():
+        semaphore = asyncio.Semaphore(concurrency)
+        tasks = [
+            evaluate_sample(idx, item, agent, judge_llm, limit, semaphore)
+            for idx, item in enumerate(eval_set)
+        ]
+        return await asyncio.gather(*tasks)
+
+    print(f"Running evaluations concurrently with limit: {concurrency}...")
+    results = asyncio.run(run_evaluation_async())
 
     # 4. Summarize and Print Aggregate Results
     avg_faith = sum(r["faithfulness"]["score"] for r in results) / len(results)
@@ -201,6 +214,7 @@ if __name__ == "__main__":
     parser.add_argument("--agent-model", type=str, default=cfg.RETRIEVAL_LLM_MODEL, help="Model name for the RAG agent.")
     parser.add_argument("--judge-model", type=str, default=cfg.JUDGE_LLM_MODEL, help="Model name for the evaluation judge (must be different).")
     parser.add_argument("--judge-api-base", type=str, default=cfg.OPENAI_API_BASE_JUDGE, help="API base URL for the judge model.")
+    parser.add_argument("--concurrency", type=int, default=5, help="Number of parallel evaluation workers.")
     args = parser.parse_args()
     
-    run_evaluation(args.limit, args.agent_model, args.judge_model, args.judge_api_base)
+    run_evaluation(args.limit, args.agent_model, args.judge_model, args.judge_api_base, args.concurrency)

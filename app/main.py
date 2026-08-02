@@ -22,27 +22,14 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-agent = StateAgent()
-cache = RedisCache()
+import app.config as cfg
 
-def get_ollama_models():
-    ollama_base = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
-    url = f"{ollama_base}/api/tags"
-    try:
-        req = urllib.request.Request(url, method="GET")
-        with urllib.request.urlopen(req, timeout=3) as response:
-            data = json.loads(response.read().decode("utf-8"))
-            # Filter out non-text/embedding-only models if desired, or return all except embedding
-            models = [m["name"] for m in data.get("models", []) if "embed" not in m["name"]]
-            # Clean up tag names (e.g., if there's mistral:latest and mistral, keep the name as is)
-            return models if models else ["llama3:latest", "llama3.2:3b", "gemma3:4b"]
-    except Exception:
-        return ["llama3:latest", "llama3.2:3b", "gemma3:4b", "mistral:latest", "deepseek-r1:8b"]
+agent = StateAgent(llm_model=cfg.RETRIEVAL_LLM_MODEL)
+cache = RedisCache()
 
 @app.get("/api/v1/models")
 async def list_available_models():
-    models = get_ollama_models()
-    return {"models": models}
+    return {"models": [cfg.RETRIEVAL_LLM_MODEL]}
 
 @app.post("/api/v1/query")
 async def handle_analyst_query(payload: QueryRequest):

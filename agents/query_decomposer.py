@@ -1,4 +1,5 @@
 from typing import List
+import app.config as cfg
 
 class QueryDecomposer:
     def __init__(self, llm):
@@ -14,7 +15,7 @@ class QueryDecomposer:
             f"Sub-queries:"
         )
         try:
-            response = self.llm.invoke(prompt, max_tokens=250)
+            response = self.llm.invoke(prompt, max_tokens=cfg.LLM_MAX_TOKENS_DECOMPOSER)
             content = response.content.strip()
             
             # Fast Python parsing of bullet points
