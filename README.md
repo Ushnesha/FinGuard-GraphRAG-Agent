@@ -53,6 +53,10 @@ We benchmarked the agent on **500 samples** from the FinQA dataset. The evaluati
 | **Answer Relevance** | **68.80%** | Measures how directly the output addresses the user's prompt |
 | **Context Recall** | **54.50%** | Measures whether the retriever captured all necessary gold-standard facts |
 
+### 📈 Metrics Trend Chart (500 - Test Query Analysis)
+
+![RAG Metrics Evaluation Trend](assets/visualization.png)
+
 ---
 
 ## 🛠️ Repository & System Directory Structure
@@ -123,11 +127,11 @@ Below is the directory mapping for the core components:
 
 | Commit | Author | Date | Message |
 | --- | --- | --- | --- |
+| `b0ac573` | Ushnesha Daripa | 2026-08-02 | docs: auto-update README [skip ci] |
 | `e7859e4` | Ushnesha Daripa | 2026-08-02 | Updated ReadMe.md |
 | `925fbba` | Ushnesha Daripa | 2026-08-01 | docs: auto-update README [skip ci] |
 | `58a9d85` | Ushnesha Daripa | 2026-08-01 | UI change of model |
 | `5a29c8d` | Ushnesha Daripa | 2026-08-01 | docs: auto-update README [skip ci] |
-| `d657e67` | Ushnesha Daripa | 2026-08-01 | code added for async evaluation and telemtry observability |
 
 
 ---

@@ -83,6 +83,10 @@ We benchmarked the agent on **500 samples** from the FinQA dataset. The evaluati
 | **Answer Relevance** | **68.80%** | Measures how directly the output addresses the user's prompt |
 | **Context Recall** | **54.50%** | Measures whether the retriever captured all necessary gold-standard facts |
 
+### 📈 Metrics Trend Chart (50-Query Sample Analysis)
+
+![RAG Metrics Evaluation Trend](assets/visualization.png)
+
 ---
 
 ## 🛠️ Repository & System Directory Structure
