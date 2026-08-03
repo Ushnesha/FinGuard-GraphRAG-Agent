@@ -51,9 +51,9 @@ We benchmarked the agent on **500 samples** from the FinQA dataset. The evaluati
 | --- | --- | --- |
 | **Faithfulness** | **59.00%** | Measures freedom from hallucination (answers are strictly grounded in context) |
 | **Answer Relevance** | **68.80%** | Measures how directly the output addresses the user's prompt |
-| **Context Recall** | **54.50%** | Measures whether the retriever captured all necessary gold-standard facts |
+| **Context Recall** | **55.50%** | Measures whether the retriever captured all necessary gold-standard facts |
 
-### 📈 Metrics Trend Chart (50-Query Sample Analysis)
+### 📈 Metrics Trend Chart (500-Query Sample Analysis)
 
 ![RAG Metrics Evaluation Trend](assets/visualization.png)
 
