@@ -28,39 +28,93 @@ def main():
     
     commits_table = get_recent_commits()
     
-    content = f"""# GraphRAG Security & Multi-Model Routing Sandbox
+    content = f"""# Robust Financial Multi-Agent GraphRAG & Guardrail System
 
-An autonomous, secure GraphRAG analytical platform built with LangGraph, Neo4j, Qdrant, Redis, and local Ollama LLMs. It features a modern light-themed chat console, dynamic LLM model selection, real-time token utilization metrics, and input guardrail security auditing.
+An autonomous, production-grade financial analysis platform engineered with **LangGraph multi-agent orchestration**, double-plane retrieval (Neo4j GraphRAG + Qdrant Dense Vector + BM25 Lexical + Cross-Encoder Reranker), semantic caching, real-time OpenTelemetry tracing, and strict input/output guardrails.
+
+---
+
+## 🖥️ Project Dashboards
+
+| Client Chat Console (FastAPI + HTML5) | Arize Phoenix Trace & Latency Telemetry |
+| --- | --- |
+| ![Web UI](assets/web_ui_dashboard.png) | ![Phoenix Telemetry](assets/arize_phoenix_dashboard.png) |
 
 ---
 
 ## 🚀 Key Features
 
-1. **Dual-Plane Retrieval (GraphRAG):**
-   - Combines semantic vector database queries (Qdrant) and structural knowledge graph queries (Neo4j driver).
-   - Melds dense embeddings and BM25 indexing via Reciprocal Rank Fusion (RRF).
-2. **Dynamic Downstream Model Selection:**
-   - Sidebar selector allows choosing any installed Ollama model on-the-fly.
-   - Fetches available models dynamically via the host's Ollama registry.
-3. **Execution Caching:**
-   - Caches agent states and results in Redis to bypass live execution.
-   - Caching is partitioned per user ID and LLM model.
-4. **Token Utilization Metrics:**
-   - Automatically parses prompt and completion token statistics from model metadata.
-   - Displays real-time token tracking in the dashboard.
-5. **Robust Security Guardrails:**
-   - An auditing node filters prompt injection attempts, database bypasses, and system prompt overrides.
+1. **LangGraph Multi-Agent Orchestration:**
+   - **Input Guardrail:** Audits queries for prompt injection, system command bypass, and credential leakage.
+   - **Supervisor Node:** Dynamically decomposes complex questions into parallelizable sub-queries and generates execution plans.
+   - **KG Agent (Internal Retrieval):** Parallelized database execution across Neo4j and hybrid search.
+   - **Web Agent (External Search):** Connects to Tavily API for recent context (fallback routing if local facts are insufficient).
+   - **Data Analyst (Python Interpreter):** Generates and runs sandboxed Python code to calculate CAGR, metrics, and output structured tables.
+   - **Output Guardrail:** Inspects and sanitizes response formats before rendering.
+
+2. **Dual-Plane Retrieval (GraphRAG + Hybrid Vector):**
+   - **Semantic/Lexical Plane:** Integrates Qdrant (dense cosine distance) and BM25 (sparse indexing) combined via **Reciprocal Rank Fusion (RRF)**.
+   - **Re-ranking Stage:** Uses a Cross-Encoder (`ms-marco-MiniLM-L-6-v2`) to filter down to the most relevant contexts.
+   - **Structural Graph Plane:** programmatically constructs entity-relationship networks on Neo4j. Includes a robust **Regex-based JSON salvage parser** to prevent chunk data loss from truncated LLM generations.
+
+3. **Production Tracing & Observability:**
+   - Out-of-the-box auto-instrumentation for LangChain and LangGraph via **OpenTelemetry**.
+   - Integrates **Arize Phoenix** for real-time visualization of traces, prompt/completion token usage, and latency percentiles.
+
+4. **Inference & Cache Optimizations:**
+   - Highly optimized for **vLLM** chunked prefill and prefix caching (achieving an **82% prefix cache hit rate** on repetitive guardrail queries).
+   - **Semantic Caching:** Integrated Redis caching partitioned by User ID and active model.
+   - Capped generation parameters (`max_tokens=2000` + explicit LLM stop sequences) to prevent infinite token loops.
 
 ---
 
-## 🛠️ Tech Stack & Architecture
+## 📊 Evaluation Report (FinQA Benchmark)
 
-- **Orchestrator:** LangGraph state graph.
-- **Backend:** FastAPI (Python 3.11).
-- **Frontend:** HTML5, Tailwind-free Glassmorphic Light CSS, Vanilla JavaScript.
-- **Data Planes:** Neo4j (Graph), Qdrant (Vector).
-- **Cache:** Redis.
-- **LLM Engine:** Local Ollama service.
+We benchmarked the agent on **500 samples** from the FinQA dataset. The evaluation is conducted asynchronously using an LLM-as-a-judge setup.
+
+* **Agent Model:** `meta-llama/Meta-Llama-3-8B-Instruct`
+* **Judge Model:** `Qwen/Qwen2.5-7B-Instruct`
+
+### Metrics Summary
+
+| Metric | Score | Description |
+| --- | --- | --- |
+| **Faithfulness** | **59.00%** | Measures freedom from hallucination (answers are strictly grounded in context) |
+| **Answer Relevance** | **68.80%** | Measures how directly the output addresses the user's prompt |
+| **Context Recall** | **54.50%** | Measures whether the retriever captured all necessary gold-standard facts |
+
+---
+
+## 🛠️ Repository & System Directory Structure
+
+Below is the directory mapping for the core components:
+
+```
+├── app/
+│   ├── main.py                  # FastAPI service exposing endpoints and serving Web UI
+│   ├── config.py                # Hyperparameters, endpoints, and credentials config
+│   ├── models.py                # Pydantic schemas for request payloads
+│   ├── compose.yaml             # Docker orchestration for Redis, Qdrant, Neo4j, and App API
+│   └── templates/
+│       └── index.html           # Modern glassmorphic light-themed chat console
+├── agents/
+│   ├── agentic.py               # Main LangGraph multi-agent state graph definition
+│   └── query_decomposer.py      # Decomposes complex prompts into independent sub-queries
+├── components/
+│   ├── hybrid_retriever.py      # Qdrant + BM25 + RRF + Cross-Encoder reranker
+│   ├── kgraph_retriever.py      # GraphRAGPipeline managing Neo4j build and salvage parsing
+│   └── reranker.py              # Cross-Encoder Reranker wrapper
+├── services/
+│   ├── telemetry.py             # Arize Phoenix + OpenTelemetry setup
+│   └── semantic_cache.py        # Redis semantic caching client
+├── evaluation/
+│   └── eval_rag.py              # Asynchronous LLM-as-a-judge benchmarking suite
+├── scripts/
+│   ├── load_data.py             # Data ingestion helpers for FinQA
+│   ├── parse_finbench.py        # Raw PDF text-extraction parser
+│   └── update_readme.py         # Automates README assembly from git activity
+└── assets/                      # UI dashboards screenshots and visual assets
+```
 
 ---
 
@@ -68,19 +122,30 @@ An autonomous, secure GraphRAG analytical platform built with LangGraph, Neo4j, 
 
 ### Prerequisites
 - Docker & Docker Compose
-- Ollama running locally on the host machine (accessible at `http://host.docker.internal:11434`)
+- A running LLM server (vLLM or Ollama) configured in `.env`
 
-### Run the Stack
-Rebuild and start the application container stack:
-```bash
-docker compose up -d --build
-```
+### Quick Start
+1. **Configure Environment Variables:**
+   Create a `.env` file in the root directory:
+   ```env
+   NEO4J_URI=bolt://localhost:7687
+   NEO4J_USER=neo4j
+   NEO4J_PASSWORD=password123
+   REDIS_URL=redis://localhost:6379/0
+   OPENAI_API_BASE=http://localhost:11434/v1
+   OPENAI_API_BASE_JUDGE=http://localhost:11435/v1
+   TAVILY_API_KEY=your_key_here
+   ENABLE_TELEMETRY=true
+   ```
 
-### Access Points
-- **Web UI:** [http://localhost:8000](http://localhost:8000)
-- **FastAPI Endpoints:**
-  - `GET /api/v1/models` - Lists available reasoning models.
-  - `POST /api/v1/query` - Submits RAG query payload.
+2. **Spin Up the Containers:**
+   ```bash
+   docker compose -f app/compose.yaml up -d --build
+   ```
+
+3. **Access points:**
+   - **Frontend UI Console:** [http://localhost:8000](http://localhost:8000)
+   - **Phoenix Telemetry Panel:** [http://localhost:6006](http://localhost:6006)
 
 ---
 
