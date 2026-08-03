@@ -123,11 +123,11 @@ Below is the directory mapping for the core components:
 
 | Commit | Author | Date | Message |
 | --- | --- | --- | --- |
+| `e7859e4` | Ushnesha Daripa | 2026-08-02 | Updated ReadMe.md |
 | `925fbba` | Ushnesha Daripa | 2026-08-01 | docs: auto-update README [skip ci] |
 | `58a9d85` | Ushnesha Daripa | 2026-08-01 | UI change of model |
 | `5a29c8d` | Ushnesha Daripa | 2026-08-01 | docs: auto-update README [skip ci] |
 | `d657e67` | Ushnesha Daripa | 2026-08-01 | code added for async evaluation and telemtry observability |
-| `8b2c16c` | Ushnesha Daripa | 2026-08-01 | docs: auto-update README [skip ci] |
 
 
 ---
