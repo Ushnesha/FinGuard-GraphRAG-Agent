@@ -34,11 +34,9 @@ An autonomous, production-grade financial analysis platform engineered with **La
 
 ---
 
-## 🖥️ Project Dashboards
+## 🏗️ System Architecture
 
-| Client Chat Console (FastAPI + HTML5) | Arize Phoenix Trace & Latency Telemetry |
-| --- | --- |
-| ![Web UI](assets/web_ui_dashboard.png) | ![Phoenix Telemetry](assets/arize_phoenix_dashboard.png) |
+![System Architecture](assets/architectural_diagram.png)
 
 ---
 
@@ -86,6 +84,14 @@ We benchmarked the agent on **500 samples** from the FinQA dataset. The evaluati
 ### 📈 Metrics Trend Chart (50-Query Sample Analysis)
 
 ![RAG Metrics Evaluation Trend](assets/visualization.png)
+
+---
+
+## 🖥️ Project Dashboards
+
+| Client Chat Console (FastAPI + HTML5) | Arize Phoenix Trace & Latency Telemetry |
+| --- | --- |
+| ![Web UI](assets/web_ui_dashboard.png) | ![Phoenix Telemetry](assets/arize_phoenix_dashboard.png) |
 
 ---
 
