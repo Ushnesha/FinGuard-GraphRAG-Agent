@@ -59,99 +59,6 @@ We benchmarked the agent on **500 samples** from the FinQA dataset. The evaluati
 
 ---
 
-## 🏗️ System Architecture
-
-```mermaid
-graph TD
-    classDef client fill:#e1f5fe,stroke:#0288d1,stroke-width:2px;
-    classDef server fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px;
-    classDef cache fill:#efebe9,stroke:#5d4037,stroke-width:2px;
-    classDef langgraph fill:#fff3e0,stroke:#ef6c00,stroke-width:2px;
-    classDef retrieval fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px;
-    classDef obs fill:#fce4ec,stroke:#c2185b,stroke-width:2px;
-
-    %% 1. Client Layer
-    User[User / Client Chat Console]:::client
-    User -- "1. HTTP POST /api/v1/query" --> FastAPI
-
-    %% 2. Web & Cache Layer
-    subgraph Web_Server ["Web Server & Caching Tier"]
-        FastAPI["FastAPI Web Server<br>(app/main.py)"]:::server
-        Redis["Redis Semantic Cache<br>(services/semantic_cache.py)"]:::cache
-    end
-
-    FastAPI -- "2. Check Query Hash" --> Redis
-    Redis -- "Cache Hit (Result & Tokens)" --> FastAPI
-    Redis -- "Cache Miss" --> StateAgent
-
-    %% 3. State Orchestration Layer
-    subgraph LangGraph_Engine ["Orchestration Engine (agents/agentic.py)"]
-        StateAgent["StateAgent Agentic Loop<br>(LangGraph StateGraph)"]:::langgraph
-        
-        IG["Input Guardrail Node<br>(Safety & Intent Audit)"]:::langgraph
-        Supervisor["Supervisor Node<br>(Plan & Route Steps)"]:::langgraph
-        
-        KGWorker["KG Agent Node<br>(Local Database Retrieval)"]:::langgraph
-        WebWorker["Web Agent Node<br>(Tavily Search API Fallback)"]:::langgraph
-        DAWorker["Data Analyst Node<br>(Restricted Python Exec)"]:::langgraph
-        
-        Response["Response Synthesis Node<br>(Aggregation & Grounding)"]:::langgraph
-        OG["Output Guardrail Node<br>(Sanitize & Audit Response)"]:::langgraph
-    end
-
-    StateAgent --> IG
-    IG -- "Unsafe" --> EndWorkflow["Terminate Work / Safe Response"]:::langgraph
-    IG -- "Safe" --> Supervisor
-    
-    Supervisor -- "Next Step" --> KGWorker
-    Supervisor -- "Next Step" --> WebWorker
-    Supervisor -- "Next Step" --> DAWorker
-    Supervisor -- "All steps completed" --> Response
-    
-    KGWorker --> Supervisor
-    WebWorker --> Supervisor
-    DAWorker --> Supervisor
-    
-    Response -- "Insufficient Context (Fallback)" --> Supervisor
-    Response -- "Context Sufficient" --> OG
-    OG --> EndAgent["Compile Output & Tokens"]:::langgraph
-    EndAgent --> FastAPI
-    FastAPI -- "3. Save in Cache & Return Response" --> Redis
-
-    %% 4. Data & Retrieval Planes
-    subgraph Data_Retrieval ["Dual-Plane Retrieval Layer"]
-        %% Semantic & Lexical
-        subgraph Semantic_Lexical ["Semantic & Lexical Plane (components/hybrid_retriever.py)"]
-            Qdrant["Qdrant DB<br>(Dense Vector Similarity)"]:::retrieval
-            BM25["BM25 Index<br>(Sparse Keyword Hits)"]:::retrieval
-            RRF["RRF Merging<br>(Reciprocal Rank Fusion)"]:::retrieval
-            Rerank["Cross-Encoder Reranker<br>(components/reranker.py)"]:::retrieval
-        end
-
-        %% Structural Graph
-        subgraph Structural_Graph ["Structural Graph Plane (components/kgraph_retriever.py)"]
-            Neo4j["Neo4j Graph Database<br>(1-Hop Relationship Lookup)"]:::retrieval
-        end
-    end
-
-    KGWorker -- "Parallel Query" --> Qdrant
-    KGWorker -- "Parallel Query" --> BM25
-    Qdrant & BM25 --> RRF
-    RRF --> Rerank
-    KGWorker -- "Graph Entities Lookup" --> Neo4j
-
-    %% 5. Observability
-    subgraph Observability ["Observability & Telemetry"]
-        OTel["OpenTelemetry Tracer"]:::obs
-        Phoenix["Arize Phoenix Dashboard<br>(services/telemetry.py)"]:::obs
-    end
-
-    LangGraph_Engine -.- OTel
-    OTel --> Phoenix
-```
-
----
-
 ## 🛠️ Repository & System Directory Structure
 
 Below is the directory mapping for the core components:
@@ -220,11 +127,11 @@ Below is the directory mapping for the core components:
 
 | Commit | Author | Date | Message |
 | --- | --- | --- | --- |
+| `3f8584b` | Ushnesha Daripa | 2026-08-07 | updated readme with project workflow |
+| `c788157` | Ushnesha Daripa | 2026-08-02 | docs: auto-update README [skip ci] |
 | `36cc638` | Ushnesha Daripa | 2026-08-02 | Readme update to add screenshots |
 | `8349de8` | Ushnesha Daripa | 2026-08-02 | Delete assets/web_ui_dashboard.png |
 | `fe10197` | Ushnesha Daripa | 2026-08-02 | Delete assets/arize_phoenix_dashboard.png |
-| `b7df457` | Ushnesha Daripa | 2026-08-02 | Merge pull request #35 from Ushnesha/ush_local |
-| `f421921` | Ushnesha Daripa | 2026-08-02 | docs: auto-update README [skip ci] |
 
 
 ---
