@@ -4,11 +4,9 @@ An autonomous, production-grade financial analysis platform engineered with **La
 
 ---
 
-## 🖥️ Project Dashboards
+## 🏗️ System Architecture
 
-| Client Chat Console (FastAPI + HTML5) | Arize Phoenix Trace & Latency Telemetry |
-| --- | --- |
-| ![Web UI](assets/web_ui_dashboard.png) | ![Phoenix Telemetry](assets/arize_phoenix_dashboard.png) |
+![System Architecture](assets/architectural_diagram.png)
 
 ---
 
@@ -92,6 +90,14 @@ Below is the directory mapping for the core components:
 
 ---
 
+## 🖥️ Project Dashboards
+
+| Client Chat Console (FastAPI + HTML5) | Arize Phoenix Trace & Latency Telemetry |
+| --- | --- |
+| ![Web UI](assets/web_ui_dashboard.png) | ![Phoenix Telemetry](assets/arize_phoenix_dashboard.png) |
+
+---
+
 ## 📥 Getting Started
 
 ### Prerequisites
@@ -127,11 +133,11 @@ Below is the directory mapping for the core components:
 
 | Commit | Author | Date | Message |
 | --- | --- | --- | --- |
+| `132fa21` | Ushnesha Daripa | 2026-08-07 | docs: auto-update README [skip ci] |
 | `a0ddc8e` | Ushnesha Daripa | 2026-08-07 | deleted flat files |
 | `885e4cd` | Ushnesha Daripa | 2026-08-07 | docs: auto-update README [skip ci] |
 | `3f8584b` | Ushnesha Daripa | 2026-08-07 | updated readme with project workflow |
 | `c788157` | Ushnesha Daripa | 2026-08-02 | docs: auto-update README [skip ci] |
-| `36cc638` | Ushnesha Daripa | 2026-08-02 | Readme update to add screenshots |
 
 
 ---
