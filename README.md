@@ -127,11 +127,11 @@ Below is the directory mapping for the core components:
 
 | Commit | Author | Date | Message |
 | --- | --- | --- | --- |
+| `a0ddc8e` | Ushnesha Daripa | 2026-08-07 | deleted flat files |
+| `885e4cd` | Ushnesha Daripa | 2026-08-07 | docs: auto-update README [skip ci] |
+| `3f8584b` | Ushnesha Daripa | 2026-08-07 | updated readme with project workflow |
+| `c788157` | Ushnesha Daripa | 2026-08-02 | docs: auto-update README [skip ci] |
 | `36cc638` | Ushnesha Daripa | 2026-08-02 | Readme update to add screenshots |
-| `8349de8` | Ushnesha Daripa | 2026-08-02 | Delete assets/web_ui_dashboard.png |
-| `fe10197` | Ushnesha Daripa | 2026-08-02 | Delete assets/arize_phoenix_dashboard.png |
-| `b7df457` | Ushnesha Daripa | 2026-08-02 | Merge pull request #35 from Ushnesha/ush_local |
-| `f421921` | Ushnesha Daripa | 2026-08-02 | docs: auto-update README [skip ci] |
 
 
 ---
