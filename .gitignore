@@ -2,6 +2,7 @@ qdrant_db/
 tests.ipynb
 __pycache__/
 codeflow.md
+architectural_diagram.md
 data/
 .env
 .DS_Store
