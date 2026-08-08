@@ -8,7 +8,7 @@ from typing import List, Dict
 from langchain_openai import ChatOpenAI
 
 # Add the project root to python path to resolve imports
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from agents.agentic import StateAgent
 import app.config as cfg
