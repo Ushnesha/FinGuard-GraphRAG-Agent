@@ -1,6 +1,28 @@
 #!/bin/bash
 
+#SBATCH --job-name=rag_llm_comparison
+#SBATCH --partition=gpu                  # Adjust to your cluster's GPU partition name
+#SBATCH --gres=gpu:1                     # Request 1 GPU
+#SBATCH --cpus-per-task=8                # Request 8 CPU cores
+#SBATCH --mem=64G                        # Request 64 GB system memory
+#SBATCH --time=03:00:00                  # 3 hours max execution time
+#SBATCH --output=results/job_%j.log       # Stdout log path (%j expands to job ID)
+#SBATCH --error=results/job_%j.err        # Stderr log path
+
+# Activate Conda Environment
+CONDA_BASE=$(conda info --base 2>/dev/null || echo "/packages/apps/mamba/2.6.2")
+if [ -f "$CONDA_BASE/etc/profile.d/conda.sh" ]; then
+    source "$CONDA_BASE/etc/profile.d/conda.sh"
+    conda activate /home/udaripa/projects/.conda/envs/ush_venv
+elif [ -f "$CONDA_BASE/bin/activate" ]; then
+    source "$CONDA_BASE/bin/activate" /home/udaripa/projects/.conda/envs/ush_venv
+else
+    export PATH="/home/udaripa/projects/.conda/envs/ush_venv/bin:$PATH"
+fi
+
 # Configuration
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+export HF_HUB_DISABLE_XET=1
 JUDGE_MODEL="Qwen/Qwen2.5-7B-Instruct"
 JUDGE_PORT=11435
 RAG_PORT=11434
@@ -19,7 +41,7 @@ MODELS=(
 cleanup_port() {
   local port=$1
   local pid=$(lsof -t -i:$port)
-  if [ -not -z "$pid" ]; then
+  if [ -n "$pid" ]; then
     echo "⚠️ Port $port is in use by PID $pid. Killing process..."
     kill -9 $pid
     sleep 2
@@ -76,7 +98,7 @@ for MODEL in "${MODELS[@]}"; do
   wait_for_port $RAG_PORT
 
   echo "📊 Running evaluation metrics and token tracking script..."
-  python evaluation/compare_models.py \
+  python "$SCRIPT_DIR/compare_models.py" \
     --models "$MODEL:$RAG_PORT" \
     --limit $LIMIT \
     --concurrency $CONCURRENCY \
