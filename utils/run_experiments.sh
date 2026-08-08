@@ -9,16 +9,8 @@
 #SBATCH --output=results/job_%j.log       # Stdout log path (%j expands to job ID)
 #SBATCH --error=results/job_%j.err        # Stderr log path
 
-# Activate Conda Environment
-CONDA_BASE=$(conda info --base 2>/dev/null || echo "/packages/apps/mamba/2.6.2")
-if [ -f "$CONDA_BASE/etc/profile.d/conda.sh" ]; then
-    source "$CONDA_BASE/etc/profile.d/conda.sh"
-    conda activate /home/udaripa/projects/.conda/envs/ush_venv
-elif [ -f "$CONDA_BASE/bin/activate" ]; then
-    source "$CONDA_BASE/bin/activate" /home/udaripa/projects/.conda/envs/ush_venv
-else
-    export PATH="/home/udaripa/projects/.conda/envs/ush_venv/bin:$PATH"
-fi
+# Prepend virtual environment path to ensure the correct python is used
+export PATH="/home/udaripa/projects/.conda/envs/ush_venv/bin:$PATH"
 
 # Configuration
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
