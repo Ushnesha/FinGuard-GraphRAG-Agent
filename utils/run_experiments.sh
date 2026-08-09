@@ -90,7 +90,7 @@ for MODEL in "${MODELS[@]}"; do
   wait_for_port $RAG_PORT
 
   echo "📊 Running evaluation metrics and token tracking script..."
-  python "$SCRIPT_DIR/compare_models.py" \
+  python "$SCRIPT_DIR/../evaluation/compare_models.py" \
     --models "$MODEL:$RAG_PORT" \
     --limit $LIMIT \
     --concurrency $CONCURRENCY \
