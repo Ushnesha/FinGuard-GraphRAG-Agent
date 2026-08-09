@@ -59,7 +59,7 @@ We benchmarked the agent on samples from the FinQA dataset. The evaluation is co
 
 | RAG Quality Metrics Comparison | Token Utilization Comparison |
 | --- | --- |
-| ![RAG Metrics Evaluation Trend](assets/metrics_trend.png) | ![Token Utilization Comparison](assets/token_comparison.png) |
+| ![RAG Metrics Evaluation Trend](assets/metrics_trends.png) | ![Token Utilization Comparison](assets/token_utilization.png) |
 
 ---
 
