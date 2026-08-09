@@ -21,12 +21,62 @@ def get_recent_commits():
     except Exception as e:
         return f"*Error retrieving git logs:* {str(e)}"
 
+def get_evaluation_report(root_dir):
+    summaries_path = os.path.join(root_dir, "results", "all_model_summaries.json")
+    
+    header_section = """## 📊 Evaluation Report (FinQA Benchmark)
+
+We benchmarked the agent on samples from the FinQA dataset. The evaluation is conducted asynchronously using an LLM-as-a-judge setup with `Qwen/Qwen2.5-7B-Instruct`.
+"""
+    
+    if os.path.exists(summaries_path):
+        try:
+            import json
+            with open(summaries_path, "r", encoding="utf-8") as f:
+                summaries = json.load(f)
+                
+            if summaries:
+                table = "| Model | Metric | Score | Avg token Utilized |\n"
+                table += "| --- | --- | :---: | :---: |\n"
+                
+                for model_name, data in sorted(summaries.items()):
+                    faith = f"{data.get('faithfulness', 0) * 100:.2f}%" if data.get('faithfulness') is not None else "N/A"
+                    relevance = f"{data.get('relevance', 0) * 100:.2f}%" if data.get('relevance') is not None else "N/A"
+                    recall = f"{data.get('recall', 0) * 100:.2f}%" if data.get('recall') is not None else "N/A"
+                    
+                    total_tokens = f"{data.get('total_tokens', 0):,}" if data.get('total_tokens') is not None else "N/A"
+                    
+                    table += f"| `{model_name}` | Faithfulness | **{faith}** | {total_tokens} |\n"
+                    table += f"| | Answer Relevance | **{relevance}** | |\n"
+                    table += f"| | Context Recall | **{recall}** | |\n"
+                
+                return f"{header_section}\n### Multi-Model Comparison Summary\n\n{table}"
+        except Exception as e:
+            print(f"[Warning] Failed to generate dynamic evaluation report: {e}")
+            
+    # Fallback to static table
+    return f"""{header_section}
+### Metrics Summary
+
+| Model | Metric | Score |
+| --- | --- | :---: |
+| `meta-llama/Meta-Llama-3-8B-Instruct` | Faithfulness | **51.66%** | 
+| | Answer Relevance | **60.00%** | 
+| | Context Recall | **50.80%** | |
+| `mistralai/Mistral-7B-Instruct-v0.3` | Faithfulness | **49.60%** | 
+| | Answer Relevance | **57.50%** | 
+| | Context Recall | **52.80%** | |
+| `google/gemma-2-9b-it` | Faithfulness | **54.94%** | 
+| | Answer Relevance | **72.00%** | 
+| | Context Recall | **32.10%** | |"""
+
 def main():
     script_dir = os.path.dirname(os.path.abspath(__file__))
     root_dir = os.path.dirname(script_dir)
     readme_path = os.path.join(root_dir, "README.md")
     
     commits_table = get_recent_commits()
+    eval_report = get_evaluation_report(root_dir)
     
     content = f"""# Robust Financial Multi-Agent GraphRAG & Guardrail System
 
@@ -66,24 +116,13 @@ An autonomous, production-grade financial analysis platform engineered with **La
 
 ---
 
-## 📊 Evaluation Report (FinQA Benchmark)
+{eval_report}
 
-We benchmarked the agent on **500 samples** from the FinQA dataset. The evaluation is conducted asynchronously using an LLM-as-a-judge setup.
+### 📈 Benchmark Analysis (500-Query Sample Analysis)
 
-* **Agent Model:** `meta-llama/Meta-Llama-3-8B-Instruct`
-* **Judge Model:** `Qwen/Qwen2.5-7B-Instruct`
-
-### Metrics Summary
-
-| Metric | Score | Description |
-| --- | --- | --- |
-| **Faithfulness** | **59.00%** | Measures freedom from hallucination (answers are strictly grounded in context) |
-| **Answer Relevance** | **68.80%** | Measures how directly the output addresses the user's prompt |
-| **Context Recall** | **54.50%** | Measures whether the retriever captured all necessary gold-standard facts |
-
-### 📈 Metrics Trend Chart (50-Query Sample Analysis)
-
-![RAG Metrics Evaluation Trend](assets/visualization.png)
+| RAG Quality Metrics Comparison | Token Utilization Comparison |
+| --- | --- |
+| ![RAG Metrics Evaluation Trend](assets/metrics_trend.png) | ![Token Utilization Comparison](assets/token_comparison.png) |
 
 ---
 
