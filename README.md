@@ -59,7 +59,7 @@ We benchmarked the agent on samples from the FinQA dataset. The evaluation is co
 
 | RAG Quality Metrics Comparison | Token Utilization Comparison |
 | --- | --- |
-| ![RAG Metrics Evaluation Trend](assets/metrics_trends.png) | ![Token Utilization Comparison](assets/token_utilization.png) |
+| ![RAG Metrics Evaluation Trend](assets/metrics_trend.png) | ![Token Utilization Comparison](assets/token_comparison.png) |
 
 ---
 
@@ -141,11 +141,11 @@ Below is the directory mapping for the core components:
 
 | Commit | Author | Date | Message |
 | --- | --- | --- | --- |
+| `9ec0e96` | Ushnesha Daripa | 2026-08-09 | fix readMe file error |
+| `e00169e` | Ushnesha Daripa | 2026-08-09 | docs: auto-update README [skip ci] |
 | `5dfe7a1` | Ushnesha Daripa | 2026-08-09 | Fix syntax error in update_readme fallback block |
 | `bcdf1bf` | Ushnesha Daripa | 2026-08-09 | docs: auto-update README [skip ci] |
 | `4281605` | Ushnesha Daripa | 2026-08-09 | Compare models directly within metric subplots |
-| `4d9d03a` | Ushnesha Daripa | 2026-08-09 | docs: auto-update README [skip ci] |
-| `e11d5b0` | Ushnesha Daripa | 2026-08-09 | Support multi-model evaluations in visualization.py |
 
 
 ---
