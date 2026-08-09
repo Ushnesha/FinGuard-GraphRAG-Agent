@@ -115,8 +115,8 @@ def main():
         nargs="+", 
         default=[
             "meta-llama/Meta-Llama-3-8B-Instruct:11434",
-            "mistralai/Mistral-7B-Instruct-v0.3:11436",
-            "google/gemma-2-9b-it:11437"
+            "mistralai/Mistral-7B-Instruct-v0.3:11434",
+            "google/gemma-2-9b-it:11434"
         ],
         help="List of models to evaluate in 'model_name:port' format."
     )
