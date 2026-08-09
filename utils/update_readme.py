@@ -84,6 +84,16 @@ An autonomous, production-grade financial analysis platform engineered with **La
 
 ---
 
+{eval_report}
+
+### 📈 Benchmark Analysis (500-Query Sample Analysis)
+
+| RAG Quality Metrics Comparison | Token Utilization Comparison |
+| --- | --- |
+| ![RAG Metrics Evaluation Trend](assets/metrics_trends.png) | ![Token Utilization Comparison](assets/token_utilization.png) |
+
+---
+
 ## 🏗️ System Architecture
 
 ![System Architecture](assets/architectural_diagram.png)
@@ -113,16 +123,6 @@ An autonomous, production-grade financial analysis platform engineered with **La
    - Highly optimized for **vLLM** chunked prefill and prefix caching (achieving an **82% prefix cache hit rate** on repetitive guardrail queries).
    - **Semantic Caching:** Integrated Redis caching partitioned by User ID and active model.
    - Capped generation parameters (`max_tokens=2000` + explicit LLM stop sequences) to prevent infinite token loops.
-
----
-
-{eval_report}
-
-### 📈 Benchmark Analysis (500-Query Sample Analysis)
-
-| RAG Quality Metrics Comparison | Token Utilization Comparison |
-| --- | --- |
-| ![RAG Metrics Evaluation Trend](assets/metrics_trends.png) | ![Token Utilization Comparison](assets/token_utilization.png) |
 
 ---
 
