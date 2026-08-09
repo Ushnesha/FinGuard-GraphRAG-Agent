@@ -135,11 +135,11 @@ Below is the directory mapping for the core components:
 
 | Commit | Author | Date | Message |
 | --- | --- | --- | --- |
+| `4281605` | Ushnesha Daripa | 2026-08-09 | Compare models directly within metric subplots |
+| `4d9d03a` | Ushnesha Daripa | 2026-08-09 | docs: auto-update README [skip ci] |
 | `e11d5b0` | Ushnesha Daripa | 2026-08-09 | Support multi-model evaluations in visualization.py |
 | `bcc0379` | Ushnesha Daripa | 2026-08-08 | docs: auto-update README [skip ci] |
 | `0e9a58e` | Ushnesha Daripa | 2026-08-08 | Standardize default ports to 11434 in compare_models |
-| `0c019f8` | Ushnesha Daripa | 2026-08-08 | docs: auto-update README [skip ci] |
-| `14f5e5d` | Ushnesha Daripa | 2026-08-08 | Fix load_data import path and update layout docs |
 
 
 ---
