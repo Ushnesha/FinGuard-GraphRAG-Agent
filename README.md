@@ -38,22 +38,28 @@ An autonomous, production-grade financial analysis platform engineered with **La
 
 ## 📊 Evaluation Report (FinQA Benchmark)
 
-We benchmarked the agent on **500 samples** from the FinQA dataset. The evaluation is conducted asynchronously using an LLM-as-a-judge setup.
+We benchmarked the agent on samples from the FinQA dataset. The evaluation is conducted asynchronously using an LLM-as-a-judge setup with `Qwen/Qwen2.5-7B-Instruct`.
 
-* **Agent Model:** `meta-llama/Meta-Llama-3-8B-Instruct`
-* **Judge Model:** `Qwen/Qwen2.5-7B-Instruct`
+### Multi-Model Comparison Summary
 
-### Metrics Summary
+| Model | Metric | Score | Avg token Utilized |
+| --- | --- | :---: | :---: |
+| `google/gemma-2-9b-it` | Faithfulness | **54.94%** | 6,461.16 |
+| | Answer Relevance | **72.00%** | |
+| | Context Recall | **32.10%** | |
+| `meta-llama/Meta-Llama-3-8B-Instruct` | Faithfulness | **51.66%** | 6,974.0 |
+| | Answer Relevance | **60.00%** | |
+| | Context Recall | **50.80%** | |
+| `mistralai/Mistral-7B-Instruct-v0.3` | Faithfulness | **49.60%** | 9,093.04 |
+| | Answer Relevance | **57.50%** | |
+| | Context Recall | **52.80%** | |
 
-| Metric | Score | Description |
-| --- | --- | --- |
-| **Faithfulness** | **59.00%** | Measures freedom from hallucination (answers are strictly grounded in context) |
-| **Answer Relevance** | **68.80%** | Measures how directly the output addresses the user's prompt |
-| **Context Recall** | **54.50%** | Measures whether the retriever captured all necessary gold-standard facts |
 
-### 📈 Metrics Trend Chart (50-Query Sample Analysis)
+### 📈 Benchmark Analysis (500-Query Sample Analysis)
 
-![RAG Metrics Evaluation Trend](assets/visualization.png)
+| RAG Quality Metrics Comparison | Token Utilization Comparison |
+| --- | --- |
+| ![RAG Metrics Evaluation Trend](assets/metrics_trend.png) | ![Token Utilization Comparison](assets/token_comparison.png) |
 
 ---
 
@@ -135,11 +141,11 @@ Below is the directory mapping for the core components:
 
 | Commit | Author | Date | Message |
 | --- | --- | --- | --- |
+| `5dfe7a1` | Ushnesha Daripa | 2026-08-09 | Fix syntax error in update_readme fallback block |
+| `bcdf1bf` | Ushnesha Daripa | 2026-08-09 | docs: auto-update README [skip ci] |
 | `4281605` | Ushnesha Daripa | 2026-08-09 | Compare models directly within metric subplots |
 | `4d9d03a` | Ushnesha Daripa | 2026-08-09 | docs: auto-update README [skip ci] |
 | `e11d5b0` | Ushnesha Daripa | 2026-08-09 | Support multi-model evaluations in visualization.py |
-| `bcc0379` | Ushnesha Daripa | 2026-08-08 | docs: auto-update README [skip ci] |
-| `0e9a58e` | Ushnesha Daripa | 2026-08-08 | Standardize default ports to 11434 in compare_models |
 
 
 ---
