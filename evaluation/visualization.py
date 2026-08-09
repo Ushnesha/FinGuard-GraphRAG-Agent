@@ -27,77 +27,78 @@ def load_all_model_results(results_dir):
     return models_data
 
 def generate_metrics_trends(models_data, output_dir):
-    """Generates a multi-panel line plot comparing Faithfulness, Relevance, and Recall trends."""
+    """Generates 3 comparison subplots (Faithfulness, Relevance, Recall) comparing all models."""
     if not models_data:
         print("[Error] No model comparison data available for trend lines.")
         return
 
-    num_models = len(models_data)
-    fig, axes = plt.subplots(num_models, 1, figsize=(15, 4.5 * num_models), dpi=300, sharex=True)
-    
-    # Handle single model edge case for axes index
-    if num_models == 1:
-        axes = [axes]
-        
+    # Set up matplotlib style
     plt.style.use('seaborn-v0_8-whitegrid')
     
-    colors = {
-        "faithfulness": "#00897b",  # Teal
-        "relevance": "#5e35b1",     # Purple
-        "recall": "#e65100"         # Dark Orange
+    fig, axes = plt.subplots(3, 1, figsize=(15, 13), dpi=300, sharex=True)
+    
+    # Consistent color palette for models
+    default_colors = ["#1a73e8", "#ff6d00", "#8e24aa", "#00897b", "#d81b60"]
+    sorted_models = sorted(list(models_data.keys()))
+    model_colors = {
+        model: default_colors[i % len(default_colors)]
+        for i, model in enumerate(sorted_models)
+    }
+    
+    metrics = ["faithfulness", "relevance", "recall"]
+    metric_titles = {
+        "faithfulness": "Faithfulness (Groundedness in Context)",
+        "relevance": "Answer Relevance (Directly answering user query)",
+        "recall": "Context Recall (Retrieval of gold facts)"
     }
     
     window = 5
+    sample_ids = []
     
-    for idx, (model_name, results) in enumerate(sorted(models_data.items())):
-        ax = axes[idx]
+    for m_idx, metric in enumerate(metrics):
+        ax = axes[m_idx]
         
-        # Sort by query index
-        results = sorted(results, key=lambda x: x["idx"])
-        sample_ids = [r["idx"] for r in results]
-        faithfulness = [r["faithfulness"] for r in results]
-        relevance = [r["relevance"] for r in results]
-        recall = [r["recall"] for r in results]
-        
-        # Plot raw scores with dashed lines & markers
-        ax.plot(sample_ids, faithfulness, color=colors["faithfulness"], linestyle="--", linewidth=1.0, alpha=0.35, marker="o", markersize=3)
-        ax.plot(sample_ids, relevance, color=colors["relevance"], linestyle="--", linewidth=1.0, alpha=0.35, marker="s", markersize=3)
-        ax.plot(sample_ids, recall, color=colors["recall"], linestyle="--", linewidth=1.0, alpha=0.35, marker="^", markersize=3)
-        
-        # Plot 5-sample Moving Average
-        if len(sample_ids) >= window:
-            ma_faith = np.convolve(faithfulness, np.ones(window)/window, mode='valid')
-            ma_relevance = np.convolve(relevance, np.ones(window)/window, mode='valid')
-            ma_recall = np.convolve(recall, np.ones(window)/window, mode='valid')
-            ma_x = list(range(window, len(sample_ids) + 1))
+        for model_name in sorted_models:
+            results = sorted(models_data[model_name], key=lambda x: x["idx"])
+            sample_ids = [r["idx"] for r in results]
+            scores = [r[metric] for r in results]
             
-            ax.plot(ma_x, ma_faith, color=colors["faithfulness"], linestyle="-", linewidth=2.2, alpha=0.9, label="Faithfulness (5-Query MA)")
-            ax.plot(ma_x, ma_relevance, color=colors["relevance"], linestyle="-", linewidth=2.2, alpha=0.9, label="Answer Relevance (5-Query MA)")
-            ax.plot(ma_x, ma_recall, color=colors["recall"], linestyle="-", linewidth=2.2, alpha=0.9, label="Context Recall (5-Query MA)")
+            color = model_colors[model_name]
+            
+            # Plot raw scores (dashed, faint)
+            ax.plot(sample_ids, scores, color=color, linestyle="--", linewidth=0.8, alpha=0.25, marker="o", markersize=2)
+            
+            # Plot 5-sample Moving Average
+            if len(sample_ids) >= window:
+                ma_scores = np.convolve(scores, np.ones(window)/window, mode='valid')
+                ma_x = list(range(window, len(sample_ids) + 1))
+                ax.plot(ma_x, ma_scores, color=color, linestyle="-", linewidth=2.0, alpha=0.9, label=f"{model_name} (5-Query MA)")
+            else:
+                # Fallback to normal plot if data is too small for MA
+                ax.plot(sample_ids, scores, color=color, linestyle="-", linewidth=2.0, alpha=0.9, label=model_name)
 
-        ax.set_title(f"Model: {model_name}", fontsize=12, fontweight='bold', loc='left', pad=8)
+        ax.set_title(metric_titles[metric], fontsize=12, fontweight='bold', pad=8, loc='left')
         ax.set_ylabel("Metric Score", fontsize=10)
         ax.set_ylim(-0.05, 1.05)
         ax.set_yticks([0.0, 0.2, 0.4, 0.6, 0.8, 1.0])
         ax.grid(True, linestyle=":", alpha=0.5, color="#cccccc")
+        ax.legend(loc="lower left", frameon=True, framealpha=0.95, facecolor="#ffffff", edgecolor="#dddddd", fontsize=8.5, ncol=min(3, len(sorted_models)))
         
-        if idx == 0:
-            ax.legend(loc="upper right", frameon=True, framealpha=0.95, facecolor="#ffffff", edgecolor="#dddddd", fontsize=9)
-            
         for spine in ["top", "right"]:
             ax.spines[spine].set_visible(False)
             
     axes[-1].set_xlabel("Query ID", fontsize=10)
-    axes[-1].set_xticks(range(1, len(sample_ids) + 1))
-    axes[-1].set_xticklabels(range(1, len(sample_ids) + 1), rotation=0, fontsize=8)
-    
-    plt.suptitle("RAG Quality Metrics Trend & Moving Averages", fontsize=15, fontweight='bold', y=0.98)
+    if sample_ids:
+        axes[-1].set_xticks(range(1, len(sample_ids) + 1))
+        axes[-1].set_xticklabels(range(1, len(sample_ids) + 1), rotation=0, fontsize=8)
+        
+    plt.suptitle("RAG Benchmark: Model-by-Model Quality Comparison", fontsize=15, fontweight='bold', y=0.98)
     plt.tight_layout()
     
     output_path = os.path.join(output_dir, "metrics_trends.png")
     plt.savefig(output_path, format="png", bbox_inches="tight")
     plt.close()
-    print(f"✅ Quality metrics trends successfully saved to: {output_path}")
+    print(f"✅ Quality metrics comparison trends successfully saved to: {output_path}")
 
 def generate_token_utilization(summaries_path, output_dir):
     """Generates a grouped, stacked bar chart comparing prompt/completion tokens across categories."""
