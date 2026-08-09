@@ -1,4 +1,4 @@
-from scripts.load_data import load_finqa_corpus
+from utils.load_data import load_finqa_corpus
 import os
 
 # --- DATA CORPUS CONFIGURATION ---
