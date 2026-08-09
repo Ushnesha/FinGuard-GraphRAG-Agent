@@ -135,11 +135,11 @@ Below is the directory mapping for the core components:
 
 | Commit | Author | Date | Message |
 | --- | --- | --- | --- |
+| `0e9a58e` | Ushnesha Daripa | 2026-08-08 | Standardize default ports to 11434 in compare_models |
+| `0c019f8` | Ushnesha Daripa | 2026-08-08 | docs: auto-update README [skip ci] |
 | `14f5e5d` | Ushnesha Daripa | 2026-08-08 | Fix load_data import path and update layout docs |
 | `3a5c9cb` | Ushnesha Daripa | 2026-08-08 | docs: auto-update README [skip ci] |
 | `56a0276` | Ushnesha Daripa | 2026-08-08 | code fix for correct script path |
-| `f570cf9` | Ushnesha Daripa | 2026-08-07 | docs: auto-update README [skip ci] |
-| `517d00f` | Ushnesha Daripa | 2026-08-07 | updated resume script update |
 
 
 ---
