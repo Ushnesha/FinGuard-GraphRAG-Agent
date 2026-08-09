@@ -4,6 +4,33 @@ An autonomous, production-grade financial analysis platform engineered with **La
 
 ---
 
+## 📊 Evaluation Report (FinQA Benchmark)
+
+We benchmarked the agent on samples from the FinQA dataset. The evaluation is conducted asynchronously using an LLM-as-a-judge setup with `Qwen/Qwen2.5-7B-Instruct`.
+
+### Multi-Model Comparison Summary
+
+| Model | Metric | Score | Avg token Utilized |
+| --- | --- | :---: | :---: |
+| `google/gemma-2-9b-it` | Faithfulness | **54.94%** | 6,461.16 |
+| | Answer Relevance | **72.00%** | |
+| | Context Recall | **32.10%** | |
+| `meta-llama/Meta-Llama-3-8B-Instruct` | Faithfulness | **51.66%** | 6,974.0 |
+| | Answer Relevance | **60.00%** | |
+| | Context Recall | **50.80%** | |
+| `mistralai/Mistral-7B-Instruct-v0.3` | Faithfulness | **49.60%** | 9,093.04 |
+| | Answer Relevance | **57.50%** | |
+| | Context Recall | **52.80%** | |
+
+
+### 📈 Benchmark Analysis (500-Query Sample Analysis)
+
+| RAG Quality Metrics Comparison | Token Utilization Comparison |
+| --- | --- |
+| ![RAG Metrics Evaluation Trend](assets/metrics_trends.png) | ![Token Utilization Comparison](assets/token_utilization.png) |
+
+---
+
 ## 🏗️ System Architecture
 
 ![System Architecture](assets/architectural_diagram.png)
@@ -33,33 +60,6 @@ An autonomous, production-grade financial analysis platform engineered with **La
    - Highly optimized for **vLLM** chunked prefill and prefix caching (achieving an **82% prefix cache hit rate** on repetitive guardrail queries).
    - **Semantic Caching:** Integrated Redis caching partitioned by User ID and active model.
    - Capped generation parameters (`max_tokens=2000` + explicit LLM stop sequences) to prevent infinite token loops.
-
----
-
-## 📊 Evaluation Report (FinQA Benchmark)
-
-We benchmarked the agent on samples from the FinQA dataset. The evaluation is conducted asynchronously using an LLM-as-a-judge setup with `Qwen/Qwen2.5-7B-Instruct`.
-
-### Multi-Model Comparison Summary
-
-| Model | Metric | Score | Avg token Utilized |
-| --- | --- | :---: | :---: |
-| `google/gemma-2-9b-it` | Faithfulness | **54.94%** | 6,461.16 |
-| | Answer Relevance | **72.00%** | |
-| | Context Recall | **32.10%** | |
-| `meta-llama/Meta-Llama-3-8B-Instruct` | Faithfulness | **51.66%** | 6,974.0 |
-| | Answer Relevance | **60.00%** | |
-| | Context Recall | **50.80%** | |
-| `mistralai/Mistral-7B-Instruct-v0.3` | Faithfulness | **49.60%** | 9,093.04 |
-| | Answer Relevance | **57.50%** | |
-| | Context Recall | **52.80%** | |
-
-
-### 📈 Benchmark Analysis (500-Query Sample Analysis)
-
-| RAG Quality Metrics Comparison | Token Utilization Comparison |
-| --- | --- |
-| ![RAG Metrics Evaluation Trend](assets/metrics_trends.png) | ![Token Utilization Comparison](assets/token_utilization.png) |
 
 ---
 
@@ -141,11 +141,11 @@ Below is the directory mapping for the core components:
 
 | Commit | Author | Date | Message |
 | --- | --- | --- | --- |
+| `45626c7` | Ushnesha Daripa | 2026-08-09 | fix readMe file error |
+| `bf41471` | Ushnesha Daripa | 2026-08-09 | docs: auto-update README [skip ci] |
 | `0bcb351` | Ushnesha Daripa | 2026-08-09 | fix readMe file error |
 | `2f037a0` | Ushnesha Daripa | 2026-08-09 | docs: auto-update README [skip ci] |
 | `9ec0e96` | Ushnesha Daripa | 2026-08-09 | fix readMe file error |
-| `e00169e` | Ushnesha Daripa | 2026-08-09 | docs: auto-update README [skip ci] |
-| `5dfe7a1` | Ushnesha Daripa | 2026-08-09 | Fix syntax error in update_readme fallback block |
 
 
 ---
