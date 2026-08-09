@@ -90,6 +90,8 @@ Below is the directory mapping for the core components:
 ├── evaluation/
 │   └── eval_rag.py              # Asynchronous LLM-as-a-judge benchmarking suite
 ├── scripts/
+│   └── run_experiments.sh       # Automates vLLM server launch and model evaluation
+├── utils/
 │   ├── load_data.py             # Data ingestion helpers for FinQA
 │   ├── parse_finbench.py        # Raw PDF text-extraction parser
 │   └── update_readme.py         # Automates README assembly from git activity
