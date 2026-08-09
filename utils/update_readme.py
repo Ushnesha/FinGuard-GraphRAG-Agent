@@ -122,7 +122,7 @@ An autonomous, production-grade financial analysis platform engineered with **La
 
 | RAG Quality Metrics Comparison | Token Utilization Comparison |
 | --- | --- |
-| ![RAG Metrics Evaluation Trend](assets/metrics_trend.png) | ![Token Utilization Comparison](assets/token_comparison.png) |
+| ![RAG Metrics Evaluation Trend](assets/metrics_trends.png) | ![Token Utilization Comparison](assets/token_utilization.png) |
 
 ---
 
