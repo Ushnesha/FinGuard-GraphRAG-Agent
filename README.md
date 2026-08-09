@@ -135,11 +135,11 @@ Below is the directory mapping for the core components:
 
 | Commit | Author | Date | Message |
 | --- | --- | --- | --- |
+| `14f5e5d` | Ushnesha Daripa | 2026-08-08 | Fix load_data import path and update layout docs |
+| `3a5c9cb` | Ushnesha Daripa | 2026-08-08 | docs: auto-update README [skip ci] |
 | `56a0276` | Ushnesha Daripa | 2026-08-08 | code fix for correct script path |
 | `f570cf9` | Ushnesha Daripa | 2026-08-07 | docs: auto-update README [skip ci] |
 | `517d00f` | Ushnesha Daripa | 2026-08-07 | updated resume script update |
-| `38a6d6e` | Ushnesha Daripa | 2026-08-07 | shell script updated |
-| `4003487` | Ushnesha Daripa | 2026-08-07 | restructure |
 
 
 ---
