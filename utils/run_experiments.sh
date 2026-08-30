@@ -18,7 +18,7 @@ export HF_HUB_DISABLE_XET=1
 JUDGE_MODEL="Qwen/Qwen2.5-7B-Instruct"
 JUDGE_PORT=11435
 RAG_PORT=11434
-HF_TOKEN="${HF_TOKEN:-<your_huggingface_token>}"
+HF_TOKEN="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"
 LIMIT=50
 CONCURRENCY=5
 
