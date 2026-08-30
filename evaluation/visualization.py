@@ -95,7 +95,7 @@ def generate_metrics_trends(models_data, output_dir):
     plt.suptitle("RAG Benchmark: Model-by-Model Quality Comparison", fontsize=15, fontweight='bold', y=0.98)
     plt.tight_layout()
     
-    output_path = os.path.join(output_dir, "metrics_trend.png")
+    output_path = os.path.join(output_dir, "metrics_trends.png")
     plt.savefig(output_path, format="png", bbox_inches="tight")
     plt.close()
     print(f"✅ Quality metrics comparison trends successfully saved to: {output_path}")
@@ -176,7 +176,7 @@ def generate_token_utilization(summaries_path, output_dir):
         
     plt.tight_layout()
     
-    output_path = os.path.join(output_dir, "token_comparison.png")
+    output_path = os.path.join(output_dir, "token_utilization.png")
     plt.savefig(output_path, format="png", bbox_inches="tight")
     plt.close()
     print(f"✅ Token utilization bar chart successfully saved to: {output_path}")
