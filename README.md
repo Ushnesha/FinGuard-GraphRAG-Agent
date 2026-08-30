@@ -165,11 +165,11 @@ Below is the directory mapping for the core components:
 
 | Commit | Author | Date | Message |
 | --- | --- | --- | --- |
+| `9fb608c` | Ushnesha Daripa | 2026-08-30 | visualization code added |
+| `0b69a76` | Ushnesha Daripa | 2026-08-07 | docs: auto-update README [skip ci] |
 | `443c0a8` | Ushnesha Daripa | 2026-08-07 | comapare_models updated |
 | `525eea7` | Ushnesha | 2026-08-30 | scripts added to the branch |
 | `c4188c6` | Ushnesha | 2026-08-30 | code updated for vLLm model run |
-| `57b0e1d` | Ushnesha Daripa | 2026-08-09 | docs: auto-update README [skip ci] |
-| `9d4486a` | Ushnesha Daripa | 2026-08-09 | fix readMe file error |
 
 
 ---
