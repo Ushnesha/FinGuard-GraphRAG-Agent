@@ -8,5 +8,4 @@ data/
 .DS_Store
 .cache/
 .conda/
-scripts/
 logs/
