@@ -15,9 +15,15 @@ PROJECT_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 
 # Load environment variables from .env if present
 if [ -f "$PROJECT_ROOT/.env" ]; then
-  set -a
-  source "$PROJECT_ROOT/.env"
-  set +a
+  eval $(python3 -c "
+with open('$PROJECT_ROOT/.env') as f:
+    for line in f:
+        line = line.strip()
+        if line and not line.startswith('#') and '=' in line:
+            k, v = line.split('=', 1)
+            k, v = k.strip(), v.strip().strip('\"\'')
+            print(f'export {k}=\"{v}\"')
+" 2>/dev/null)
 fi
 
 export PATH="/home/udaripa/projects/.conda/envs/ush_venv/bin:$PATH"
