@@ -14,11 +14,20 @@ export PATH="/home/udaripa/projects/.conda/envs/ush_venv/bin:$PATH"
 
 # Configuration
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+
+# Load environment variables from .env if present
+if [ -f "$PROJECT_ROOT/.env" ]; then
+  set -a
+  source "$PROJECT_ROOT/.env"
+  set +a
+fi
+
 export HF_HUB_DISABLE_XET=1
 JUDGE_MODEL="Qwen/Qwen2.5-7B-Instruct"
 JUDGE_PORT=11435
 RAG_PORT=11434
-HF_TOKEN="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"
+HF_TOKEN="${HF_TOKEN:-${HUGGINGFACE_TOKEN:-}}"
 LIMIT=50
 CONCURRENCY=5
 

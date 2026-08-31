@@ -13,6 +13,13 @@
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 
+# Load environment variables from .env if present
+if [ -f "$PROJECT_ROOT/.env" ]; then
+  set -a
+  source "$PROJECT_ROOT/.env"
+  set +a
+fi
+
 export PATH="/home/udaripa/projects/.conda/envs/ush_venv/bin:$PATH"
 export PYTHONPATH="$PROJECT_ROOT"
 export HF_HUB_DISABLE_XET=1
@@ -20,7 +27,7 @@ export HF_HUB_DISABLE_XET=1
 # 2. Configuration & Model Selection
 MODEL=$(python3 -c "import app.config as cfg; print(cfg.RETRIEVAL_LLM_MODEL)")
 RAG_PORT=11434
-HF_TOKEN="${HF_TOKEN:-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}"
+HF_TOKEN="${HF_TOKEN:-${HUGGINGFACE_TOKEN:-}}"
 
 # 3. Helper Functions
 cleanup_port() {
