@@ -63,30 +63,6 @@ We benchmarked the agent on samples from the FinQA dataset. The evaluation is co
 
 ---
 
-<<<<<<< Updated upstream
-=======
-## 📊 Evaluation Report (FinQA Benchmark)
-
-We benchmarked the agent on **500 samples** from the FinQA dataset. The evaluation is conducted asynchronously using an LLM-as-a-judge setup.
-
-* **Agent Model:** `meta-llama/Meta-Llama-3-8B-Instruct`
-* **Judge Model:** `Qwen/Qwen2.5-7B-Instruct`
-
-### Metrics Summary
-
-| Metric | Score | Description |
-| --- | --- | --- |
-| **Faithfulness** | **59.00%** | Measures freedom from hallucination (answers are strictly grounded in context) |
-| **Answer Relevance** | **68.80%** | Measures how directly the output addresses the user's prompt |
-| **Context Recall** | **54.50%** | Measures whether the retriever captured all necessary gold-standard facts |
-
-### 📈 Metrics Trend Chart (500-Query Sample Analysis)
-
-![RAG Metrics Evaluation Trend](assets/metrics_trends.png)
-
----
-
->>>>>>> Stashed changes
 ## 🖥️ Project Dashboards
 
 | Client Chat Console (FastAPI + HTML5) | Arize Phoenix Trace & Latency Telemetry |
