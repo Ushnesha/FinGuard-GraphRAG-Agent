@@ -21,8 +21,9 @@ TAVILY_API_URL = "https://api.tavily.com/search"
 
 # --- SYSTEM HYPERPARAMETERS & TOKENS ---
 RETRIEVAL_LLM_MODELS = ["meta-llama/Meta-Llama-3-8B-Instruct", "mistralai/Mistral-7B-Instruct-v0.3", "google/gemma-2-9b-it"]
+RETRIEVAL_LLM_MODEL = RETRIEVAL_LLM_MODELS[0]
 JUDGE_LLM_MODEL = "Qwen/Qwen2.5-7B-Instruct"
-LLM_TEMPERATURE = 0.0
+LLM_TEMPERATURE = 0.1
 LLM_MAX_TOKENS_DEFAULT = 200
 LLM_MAX_TOKENS_GUARDRAIL = 50
 LLM_MAX_TOKENS_SUPERVISOR = 150
