@@ -125,9 +125,6 @@ An autonomous, production-grade financial analysis platform engineered with **La
    - Capped generation parameters (`max_tokens=2000` + explicit LLM stop sequences) to prevent infinite token loops.
 
 ---
-
-<<<<<<< HEAD
-<<<<<<< Updated upstream
 =======
 ## 📊 Evaluation Report (FinQA Benchmark)
 
@@ -149,10 +146,7 @@ We benchmarked the agent on **500 samples** from the FinQA dataset. The evaluati
 ![RAG Metrics Evaluation Trend](assets/metrics_trends.png)
 
 ---
-
->>>>>>> Stashed changes
 =======
->>>>>>> 23de232e5ee172af56cd41c9680257f449ba3ca3
 ## 🖥️ Project Dashboards
 
 | Client Chat Console (FastAPI + HTML5) | Arize Phoenix Trace & Latency Telemetry |
