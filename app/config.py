@@ -20,7 +20,7 @@ TAVILY_API_KEY = os.getenv("TAVILY_API_KEY", "")
 TAVILY_API_URL = "https://api.tavily.com/search"
 
 # --- SYSTEM HYPERPARAMETERS & TOKENS ---
-RETRIEVAL_LLM_MODEL = "meta-llama/Meta-Llama-3-8B-Instruct"
+RETRIEVAL_LLM_MODELS = ["meta-llama/Meta-Llama-3-8B-Instruct", "mistralai/Mistral-7B-Instruct-v0.3", "google/gemma-2-9b-it"]
 JUDGE_LLM_MODEL = "Qwen/Qwen2.5-7B-Instruct"
 LLM_TEMPERATURE = 0.0
 LLM_MAX_TOKENS_DEFAULT = 200

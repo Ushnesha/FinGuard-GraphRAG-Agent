@@ -1,0 +1,128 @@
+{
+  "meta-llama/Meta-Llama-3-8B-Instruct": {
+    "faithfulness": 0.5166000000000003,
+    "relevance": 0.6000000000000003,
+    "recall": 0.5080000000000002,
+    "prompt_tokens": 6262.88,
+    "completion_tokens": 711.12,
+    "total_tokens": 6974.0,
+    "categories": {
+      "Math_Calculation": {
+        "faithfulness": 0.5076666666666667,
+        "relevance": 0.65,
+        "recall": 0.5400000000000001,
+        "prompt_tokens": 6581.566666666667,
+        "completion_tokens": 679.1,
+        "count": 30
+      },
+      "Comparative_Analysis": {
+        "faithfulness": 0.5125,
+        "relevance": 0.4937499999999999,
+        "recall": 0.4125,
+        "prompt_tokens": 6224.125,
+        "completion_tokens": 806.5,
+        "count": 16
+      },
+      "Fact_Lookup": {
+        "faithfulness": 0.5333333333333333,
+        "relevance": 0.6,
+        "recall": 0.6,
+        "prompt_tokens": 3737.6666666666665,
+        "completion_tokens": 565.0,
+        "count": 3
+      },
+      "General/Comparative": {
+        "faithfulness": 0.8,
+        "relevance": 0.8,
+        "recall": 0.8,
+        "prompt_tokens": 4898.0,
+        "completion_tokens": 584.0,
+        "count": 1
+      }
+    }
+  },
+  "mistralai/Mistral-7B-Instruct-v0.3": {
+    "faithfulness": 0.4960000000000002,
+    "relevance": 0.5750000000000001,
+    "recall": 0.5280000000000004,
+    "prompt_tokens": 8401.44,
+    "completion_tokens": 691.6,
+    "total_tokens": 9093.04,
+    "categories": {
+      "Math_Calculation": {
+        "faithfulness": 0.4900000000000001,
+        "relevance": 0.555,
+        "recall": 0.5933333333333335,
+        "prompt_tokens": 9051.0,
+        "completion_tokens": 736.6333333333333,
+        "count": 30
+      },
+      "Comparative_Analysis": {
+        "faithfulness": 0.44375,
+        "relevance": 0.5906250000000001,
+        "recall": 0.4124999999999999,
+        "prompt_tokens": 8065.6875,
+        "completion_tokens": 685.1875,
+        "count": 16
+      },
+      "Fact_Lookup": {
+        "faithfulness": 0.7333333333333334,
+        "relevance": 0.5666666666666667,
+        "recall": 0.39999999999999997,
+        "prompt_tokens": 5061.0,
+        "completion_tokens": 388.3333333333333,
+        "count": 3
+      },
+      "General/Comparative": {
+        "faithfulness": 0.8,
+        "relevance": 0.95,
+        "recall": 0.8,
+        "prompt_tokens": 4308.0,
+        "completion_tokens": 353.0,
+        "count": 1
+      }
+    }
+  },
+  "google/gemma-2-9b-it": {
+    "faithfulness": 0.5494000000000002,
+    "relevance": 0.7199999999999999,
+    "recall": 0.321,
+    "prompt_tokens": 6105.98,
+    "completion_tokens": 355.18,
+    "total_tokens": 6461.16,
+    "categories": {
+      "Math_Calculation": {
+        "faithfulness": 0.6023333333333335,
+        "relevance": 0.7033333333333334,
+        "recall": 0.36833333333333323,
+        "prompt_tokens": 6589.0,
+        "completion_tokens": 404.6,
+        "count": 30
+      },
+      "Comparative_Analysis": {
+        "faithfulness": 0.425,
+        "relevance": 0.8,
+        "recall": 0.1875,
+        "prompt_tokens": 5754.6875,
+        "completion_tokens": 276.4375,
+        "count": 16
+      },
+      "Fact_Lookup": {
+        "faithfulness": 0.6666666666666666,
+        "relevance": 0.43333333333333335,
+        "recall": 0.39999999999999997,
+        "prompt_tokens": 3681.3333333333335,
+        "completion_tokens": 274.6666666666667,
+        "count": 3
+      },
+      "General/Comparative": {
+        "faithfulness": 0.6,
+        "relevance": 0.8,
+        "recall": 0.8,
+        "prompt_tokens": 4510.0,
+        "completion_tokens": 374.0,
+        "count": 1
+      }
+    }
+  }
+}

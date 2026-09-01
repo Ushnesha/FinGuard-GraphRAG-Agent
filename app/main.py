@@ -29,7 +29,7 @@ cache = RedisCache()
 
 @app.get("/api/v1/models")
 async def list_available_models():
-    return {"models": [cfg.RETRIEVAL_LLM_MODEL]}
+    return {"models": cfg.RETRIEVAL_LLM_MODELS}
 
 @app.post("/api/v1/query")
 async def handle_analyst_query(payload: QueryRequest):

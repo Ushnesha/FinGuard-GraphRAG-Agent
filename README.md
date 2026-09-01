@@ -63,6 +63,33 @@ We benchmarked the agent on samples from the FinQA dataset. The evaluation is co
 
 ---
 
+<<<<<<< HEAD
+<<<<<<< Updated upstream
+=======
+## 📊 Evaluation Report (FinQA Benchmark)
+
+We benchmarked the agent on **500 samples** from the FinQA dataset. The evaluation is conducted asynchronously using an LLM-as-a-judge setup.
+
+* **Agent Model:** `meta-llama/Meta-Llama-3-8B-Instruct`
+* **Judge Model:** `Qwen/Qwen2.5-7B-Instruct`
+
+### Metrics Summary
+
+| Metric | Score | Description |
+| --- | --- | --- |
+| **Faithfulness** | **59.00%** | Measures freedom from hallucination (answers are strictly grounded in context) |
+| **Answer Relevance** | **68.80%** | Measures how directly the output addresses the user's prompt |
+| **Context Recall** | **54.50%** | Measures whether the retriever captured all necessary gold-standard facts |
+
+### 📈 Metrics Trend Chart (500-Query Sample Analysis)
+
+![RAG Metrics Evaluation Trend](assets/metrics_trends.png)
+
+---
+
+>>>>>>> Stashed changes
+=======
+>>>>>>> 23de232e5ee172af56cd41c9680257f449ba3ca3
 ## 🖥️ Project Dashboards
 
 | Client Chat Console (FastAPI + HTML5) | Arize Phoenix Trace & Latency Telemetry |
@@ -141,11 +168,19 @@ Below is the directory mapping for the core components:
 
 | Commit | Author | Date | Message |
 | --- | --- | --- | --- |
+<<<<<<< HEAD
+| `f90f06e` | Ushnesha Daripa | 2026-08-30 | UI update |
+| `7d937d4` | Ushnesha Daripa | 2026-08-30 | docs: auto-update README [skip ci] |
+| `c53a4dd` | Ushnesha Daripa | 2026-08-30 | hf token safety measures |
+| `2ffb2f9` | Ushnesha Daripa | 2026-08-30 | docs: auto-update README [skip ci] |
+| `008fa7d` | Ushnesha Daripa | 2026-08-30 | hf token safety measures |
+=======
 | `7ee60dd` | Ushnesha Daripa | 2026-08-30 | visualization code added |
 | `48d5c10` | Ushnesha Daripa | 2026-08-09 | docs: auto-update README [skip ci] |
 | `45626c7` | Ushnesha Daripa | 2026-08-09 | fix readMe file error |
 | `bf41471` | Ushnesha Daripa | 2026-08-09 | docs: auto-update README [skip ci] |
 | `0bcb351` | Ushnesha Daripa | 2026-08-09 | fix readMe file error |
+>>>>>>> 23de232e5ee172af56cd41c9680257f449ba3ca3
 
 
 ---
