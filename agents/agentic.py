@@ -46,7 +46,8 @@ class StateAgent:
             openai_api_key="none",                          # vLLM doesn't require a real API key
             openai_api_base=cfg.OPENAI_API_BASE,
             temperature=cfg.LLM_TEMPERATURE,
-            max_tokens=cfg.LLM_MAX_TOKENS_DEFAULT
+            max_tokens=cfg.LLM_MAX_TOKENS_DEFAULT,
+            model_kwargs={"frequency_penalty": 0.5, "presence_penalty": 0.1}
         )
         
         self.rag_pipeline = GraphRAGPipeline(self.neo4j_driver,llm_instance=self.llm, documents=CORPUS)
