@@ -126,6 +126,7 @@ An autonomous, production-grade financial analysis platform engineered with **La
 
 ---
 
+<<<<<<< HEAD
 <<<<<<< Updated upstream
 =======
 ## 📊 Evaluation Report (FinQA Benchmark)
@@ -150,6 +151,8 @@ We benchmarked the agent on **500 samples** from the FinQA dataset. The evaluati
 ---
 
 >>>>>>> Stashed changes
+=======
+>>>>>>> 23de232e5ee172af56cd41c9680257f449ba3ca3
 ## 🖥️ Project Dashboards
 
 | Client Chat Console (FastAPI + HTML5) | Arize Phoenix Trace & Latency Telemetry |
