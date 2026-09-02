@@ -165,11 +165,11 @@ Below is the directory mapping for the core components:
 
 | Commit | Author | Date | Message |
 | --- | --- | --- | --- |
+| `c625010` | Ushnesha Daripa | 2026-09-01 | sidecar phase 1 added |
+| `b428b64` | Ushnesha Daripa | 2026-08-31 | docs: auto-update README [skip ci] |
 | `815ca39` | Ushnesha Daripa | 2026-08-31 | config file update |
 | `3f3338d` | Ushnesha Daripa | 2026-08-31 | docs: auto-update README [skip ci] |
 | `18dfbb3` | Ushnesha Daripa | 2026-08-31 | hyperparams added to prevent LLM from repetitive text |
-| `ec86fbf` | Ushnesha Daripa | 2026-08-30 | docs: auto-update README [skip ci] |
-| `f90f06e` | Ushnesha Daripa | 2026-08-30 | UI update |
 
 
 ---
