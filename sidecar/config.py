@@ -12,7 +12,7 @@ class SidecarSettings(BaseModel):
         default_factory=lambda: int(os.getenv("SIDECAR_PORT", "8000"))
     )
     target_llm_url: str = Field(
-        default_factory=lambda: os.getenv("TARGET_LLM_URL", "http://localhost:8080").rstrip("/")
+        default_factory=lambda: os.getenv("TARGET_LLM_URL", "http://localhost:11434").rstrip("/")
     )
     timeout_seconds: float = Field(
         default_factory=lambda: float(os.getenv("SIDECAR_TIMEOUT", "120.0"))
