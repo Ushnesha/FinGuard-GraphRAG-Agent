@@ -31,7 +31,7 @@ export PYTHONPATH="$PROJECT_ROOT"
 export HF_HUB_DISABLE_XET=1
 
 # 2. Configuration & Model Selection
-MODEL=$(python3 -c "import app.config as cfg; print(cfg.RETRIEVAL_LLM_MODEL)")
+MODEL=$(python3 -c "import app.config as cfg; print(cfg.RETRIEVAL_LLM_MODELS[0])")
 RAG_PORT=11434
 HF_TOKEN="${HF_TOKEN:-${HUGGINGFACE_TOKEN:-}}"
 
